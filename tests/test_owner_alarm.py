@@ -115,3 +115,16 @@ def test_start_scheduler_migrates_legacy_pending_alarm(tmp_path, monkeypatch):
     saved = json.loads(target.read_text(encoding="utf-8"))
     assert saved["enabled"] is True
     assert saved["bot_key"] == alarm._bot_key(bot)
+
+
+def test_bot_key_is_stable_when_token_secret_rotates():
+    class _TokenBot:
+        def __init__(self, token):
+            self.token = token
+
+    first = _TokenBot("123456:old-secret")
+    rotated = _TokenBot("123456:new-secret")
+    other_bot = _TokenBot("987654:other-secret")
+
+    assert alarm._bot_key(first) == alarm._bot_key(rotated)
+    assert alarm._bot_key(first) != alarm._bot_key(other_bot)
