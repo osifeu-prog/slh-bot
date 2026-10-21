@@ -465,9 +465,13 @@ def _verify_provider_transaction(order: dict, callback_body: dict) -> dict:
     if currency != "ILS":
         raise ValueError("PAYPLUS_CURRENCY_MISMATCH")
 
-    tx_uid = summary.get("transaction_uid") or transaction_uid
+    tx_uid = summary.get("transaction_uid")
     if not tx_uid:
+        # Never substitute a callback-supplied identifier for the provider's
+        # server-side transaction reference.
         raise ValueError("PAYPLUS_TRANSACTION_UID_MISSING")
+    if transaction_uid and str(transaction_uid) != str(tx_uid):
+        raise ValueError("PAYPLUS_TRANSACTION_UID_MISMATCH")
     return {
         "transaction_uid": str(tx_uid),
         "verified": True,
