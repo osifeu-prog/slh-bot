@@ -96,3 +96,22 @@ def test_due_alarm_success_sends_and_completes_one_shot(tmp_path, monkeypatch):
     assert saved["fired_at"] == now.isoformat()
     assert "next_attempt_at" not in saved
     assert bot.sent == [(12345, "test alarm")]
+
+
+def test_start_scheduler_migrates_legacy_pending_alarm(tmp_path, monkeypatch):
+    target = tmp_path / "alarm.json"
+    monkeypatch.setenv("SLH_ALARM_STATE_FILE", str(target))
+    now = datetime(2026, 10, 21, 8, 0, tzinfo=timezone.utc)
+    legacy = _due_alarm(now)
+    legacy.pop("bot_key")
+    alarm.save_state(legacy)
+
+    bot = _FakeAlarmBot()
+    monkeypatch.setattr(alarm.threading.Thread, "start", lambda self: None)
+    monkeypatch.setattr(alarm, "_SCHEDULER_STARTED", False)
+    monkeypatch.setattr(alarm, "_SCHEDULER_BOTS", {})
+    alarm.start_scheduler(bot)
+
+    saved = json.loads(target.read_text(encoding="utf-8"))
+    assert saved["enabled"] is True
+    assert saved["bot_key"] == alarm._bot_key(bot)
