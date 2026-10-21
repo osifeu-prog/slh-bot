@@ -269,7 +269,7 @@ def test_ledger_evidence_command_is_private_owner_only_and_redacts_other_account
     assert "PRIVATE_OTHER_UID" not in output
     assert "SECRET_PURCHASE" not in output
     assert "999.0" not in output
-    assert "No changes" in output
+    assert "no DB, ledger, balances, wallets, staking positions, or gates changed" in output
     assert db == before
 
 
