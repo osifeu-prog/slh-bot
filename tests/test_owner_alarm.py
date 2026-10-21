@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from handlers import alarm_handler as alarm
@@ -39,3 +39,60 @@ def test_schedule_and_disable_are_persistent(tmp_path, monkeypatch):
     assert data["timezone"] == "Asia/Jerusalem"
     alarm.disable_alarm()
     assert json.loads(target.read_text(encoding="utf-8"))["enabled"] is False
+
+
+
+class _FakeAlarmBot:
+    def __init__(self, fail=False):
+        self.fail = fail
+        self.sent = []
+
+    def send_message(self, chat_id, message):
+        self.sent.append((chat_id, message))
+        if self.fail:
+            raise RuntimeError("telegram unavailable")
+
+
+def _due_alarm(now, bot_key="test-bot"):
+    return {
+        "enabled": True,
+        "chat_id": 12345,
+        "bot_key": bot_key,
+        "fire_at": (now - timedelta(seconds=1)).isoformat(),
+        "attempts": 0,
+    }
+
+
+def test_due_alarm_send_failure_keeps_alarm_enabled_and_schedules_retry(tmp_path, monkeypatch):
+    target = tmp_path / "alarm.json"
+    monkeypatch.setenv("SLH_ALARM_STATE_FILE", str(target))
+    now = datetime(2026, 10, 21, 8, 0, tzinfo=timezone.utc)
+    bot = _FakeAlarmBot(fail=True)
+    monkeypatch.setattr(alarm, "_SCHEDULER_BOTS", {"test-bot": bot})
+    monkeypatch.setattr(alarm, "_morning_message", lambda: "test alarm")
+    alarm.save_state(_due_alarm(now))
+
+    assert alarm._deliver_due_alarm(now=now) == "send_failed"
+    saved = json.loads(target.read_text(encoding="utf-8"))
+    assert saved["enabled"] is True
+    assert saved["attempts"] == 1
+    assert saved["last_error"] == "RuntimeError"
+    assert datetime.fromisoformat(saved["next_attempt_at"]) > now
+    assert bot.sent == [(12345, "test alarm")]
+
+
+def test_due_alarm_success_sends_and_completes_one_shot(tmp_path, monkeypatch):
+    target = tmp_path / "alarm.json"
+    monkeypatch.setenv("SLH_ALARM_STATE_FILE", str(target))
+    now = datetime(2026, 10, 21, 8, 0, tzinfo=timezone.utc)
+    bot = _FakeAlarmBot()
+    monkeypatch.setattr(alarm, "_SCHEDULER_BOTS", {"test-bot": bot})
+    monkeypatch.setattr(alarm, "_morning_message", lambda: "test alarm")
+    alarm.save_state(_due_alarm(now))
+
+    assert alarm._deliver_due_alarm(now=now) == "sent"
+    saved = json.loads(target.read_text(encoding="utf-8"))
+    assert saved["enabled"] is False
+    assert saved["fired_at"] == now.isoformat()
+    assert "next_attempt_at" not in saved
+    assert bot.sent == [(12345, "test alarm")]
