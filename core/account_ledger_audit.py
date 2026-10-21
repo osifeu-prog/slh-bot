@@ -378,9 +378,13 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     next_before is not None
                     and abs(next_before - verified["next_before"]) <= EPSILON
                 ),
-                "combined_delta_matches": (
-                    observed_delta is not None
-                    and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                # Staked is a separate counter, never part of the Credits
+                # continuity delta. The event can resolve a Credits gap only
+                # when its Credits component alone matches the observed delta.
+                "credits_component_matches_delta": (
+                    credits_component is not None
+                    and observed_delta is not None
+                    and abs(credits_component - observed_delta) <= EPSILON
                 ),
                 "source_account_cleared": source_account_cleared,
             }
