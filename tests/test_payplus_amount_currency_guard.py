@@ -62,15 +62,12 @@ def test_fulfilled_callback_replay_must_verify_before_revenue_reconciliation(mon
         "_verify_provider_transaction",
         lambda *_args: (_ for _ in ()).throw(ValueError("PAYPLUS_AMOUNT_MISSING")),
     )
-    fulfill = pytest.MonkeyPatch()
-    try:
-        mocked_fulfill = __import__("unittest.mock", fromlist=["Mock"]).Mock()
-        monkeypatch.setattr(cards, "_fulfill", mocked_fulfill)
-        with pytest.raises(ValueError, match="PAYPLUS_AMOUNT_MISSING"):
-            cards.handle_payplus_callback({"more_info": "card:test"}, "signed", "PayPlus")
-        mocked_fulfill.assert_not_called()
-    finally:
-        fulfill.undo()
+    from unittest.mock import Mock
+    mocked_fulfill = Mock()
+    monkeypatch.setattr(cards, "_fulfill", mocked_fulfill)
+    with pytest.raises(ValueError, match="PAYPLUS_AMOUNT_MISSING"):
+        cards.handle_payplus_callback({"more_info": "card:test"}, "signed", "PayPlus")
+    mocked_fulfill.assert_not_called()
 
 
 def test_fulfilled_callback_replay_rejects_different_transaction_uid(monkeypatch):
