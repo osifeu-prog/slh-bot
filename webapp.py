@@ -1723,6 +1723,7 @@ def governance_read_api():
             my_vote = individual_votes.get(f"p{proposal_id}_{uid}")
             safe_proposals.append({
                 "id": proposal_id,
+                "created_by_me": str(proposal.get("created_by") or "") == str(uid),
                 "my_vote": {
                     "choice": my_vote.get("choice"),
                     "weight": my_vote.get("weight", 1),
