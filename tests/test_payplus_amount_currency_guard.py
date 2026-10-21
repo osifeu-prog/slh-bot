@@ -133,3 +133,21 @@ def test_fulfilled_callback_replay_nonapproved_does_not_cancel_order(monkeypatch
     update.assert_not_called()
     release.assert_not_called()
     fulfill.assert_not_called()
+
+
+def test_provider_transaction_requires_server_returned_transaction_uid(monkeypatch):
+    response = _provider_response(amount="199.00", currency_code="ILS")
+    response["data"]["transaction"].pop("transaction_uid", None)
+    monkeypatch.setattr(cards, "_post_payplus", lambda *_args, **_kwargs: response)
+    with pytest.raises(ValueError, match="PAYPLUS_TRANSACTION_UID_MISSING"):
+        cards._verify_provider_transaction(ORDER, {"transaction_uid": "callback-only-tx"})
+
+
+def test_provider_transaction_rejects_callback_uid_mismatch(monkeypatch):
+    monkeypatch.setattr(
+        cards,
+        "_post_payplus",
+        lambda *_args, **_kwargs: _provider_response(amount="199.00", currency_code="ILS"),
+    )
+    with pytest.raises(ValueError, match="PAYPLUS_TRANSACTION_UID_MISMATCH"):
+        cards._verify_provider_transaction(ORDER, {"transaction_uid": "different-callback-tx"})
