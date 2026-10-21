@@ -377,6 +377,7 @@ def stars_invoice():
 def _exchange_gate_control_authorized():
     expected = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
     if not expected:
+        print("[EXCHANGE_GATE] bridge token not configured")
         return jsonify({"error": "EXCHANGE_CONTROL_NOT_CONFIGURED"}), 503
     authorization = str(request.headers.get("Authorization", "") or "").strip()
     scheme, _, supplied = authorization.partition(" ")
@@ -418,7 +419,9 @@ def internal_exchange_gate_control():
             response.headers["Cache-Control"] = "no-store"
             return response, 200
         except Exception as exc:
-            return jsonify({"ok": False, "error": safe_railway_error_code(exc)}), 503
+            code = safe_railway_error_code(exc)
+            print("[EXCHANGE_GATE] Railway gate status read failed:", code)
+            return jsonify({"ok": False, "error": code}), 503
 
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
