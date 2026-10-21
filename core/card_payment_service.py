@@ -15,6 +15,7 @@ import hmac
 import json
 import os
 import re
+import threading
 import time
 import uuid
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -29,6 +30,9 @@ from store.grant_engine import apply_grant
 
 PAYPLUS_PROD = "https://restapi.payplus.co.il/api/v1.0"
 PAYPLUS_STAGING = "https://restapidev.payplus.co.il/api/v1.0"
+
+_card_recovery_lock = threading.Lock()
+_card_recovery_thread = None
 
 
 def _enabled() -> bool:
@@ -786,9 +790,8 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
 
 
 def start_card_recovery_loop(interval_seconds: int = 300):
-    """Run provider reconciliation + fulfillment recovery in the background."""
-    import threading
-
+    """Start at most one provider reconciliation loop per process."""
+    global _card_recovery_thread
     interval_seconds = max(60, int(interval_seconds))
 
     def runner():
@@ -802,13 +805,17 @@ def start_card_recovery_loop(interval_seconds: int = 300):
                 print("[CARD] reconciliation loop error:", type(exc).__name__)
             time.sleep(interval_seconds)
 
-    thread = threading.Thread(
-        target=runner,
-        daemon=True,
-        name="card-payment-recovery",
-    )
-    thread.start()
-    return thread
+    with _card_recovery_lock:
+        if _card_recovery_thread is not None and _card_recovery_thread.is_alive():
+            return _card_recovery_thread
+        thread = threading.Thread(
+            target=runner,
+            daemon=True,
+            name="card-payment-recovery",
+        )
+        _card_recovery_thread = thread
+        thread.start()
+        return thread
 
 
 def recover_card_orders(uid: str, limit: int = 10) -> dict:
