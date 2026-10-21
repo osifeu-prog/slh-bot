@@ -607,15 +607,9 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
     if not order:
         raise ValueError("CARD_ORDER_NOT_FOUND")
 
-    if order.get("status") == "FULFILLED":
-        # Reconcile a missing revenue event on an exact replay, but never grant
-        # the product again. _fulfill checks the existing revenue row fail-closed.
-        result = _fulfill(order)
-        return {
-            "status": result.get("status", "duplicate"),
-            "order_id": order["order_id"],
-        }
-
+    # Every callback, including replay of a fulfilled order, must pass the
+    # same server-side provider lookup and exact amount/currency checks before
+    # it can touch the revenue ledger.
     try:
         verification = _verify_provider_transaction(order, body)
     except ValueError as exc:
@@ -629,6 +623,19 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
             _release_inventory(order["order_id"])
             return {"status": "cancelled", "order_id": order["order_id"]}
         raise
+
+    if order.get("status") == "FULFILLED":
+        existing_tx = str(order.get("transaction_uid") or "").strip()
+        verified_tx = str(verification.get("transaction_uid") or "").strip()
+        if existing_tx and existing_tx != verified_tx:
+            raise ValueError("PAYPLUS_TRANSACTION_UID_MISMATCH")
+        # Preserve the fulfilled state; _fulfill only reconciles the idempotent
+        # revenue record and returns duplicate without granting the item again.
+        result = _fulfill(order)
+        return {
+            "status": result.get("status", "duplicate"),
+            "order_id": order["order_id"],
+        }
 
     updated = _update_order(
         order["order_id"],
