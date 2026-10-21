@@ -618,6 +618,10 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
         verification = _verify_provider_transaction(order, body)
     except ValueError as exc:
         if str(exc) == "PAYPLUS_PAYMENT_NOT_APPROVED":
+            # A late/replayed non-approved callback must not cancel a previously
+            # fulfilled order or release inventory already associated with it.
+            if order.get("status") == "FULFILLED":
+                raise
             _update_order(
                 order["order_id"],
                 status="CANCELLED",
