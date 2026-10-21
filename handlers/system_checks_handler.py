@@ -420,6 +420,124 @@ def register(bot, context=None):
         except Exception as exc:
             bot.reply_to(message, f"❌ Exchange check failed safely: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["check_ledger_evidence"])
+    def check_ledger_evidence_cmd(message):
+        """Owner-only, private, read-only evidence for the two known ledger windows."""
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — ledger evidence diagnostics.", parse_mode=None)
+            return
+        chat = getattr(message, "chat", None)
+        if chat is None or getattr(chat, "type", None) != "private":
+            bot.reply_to(message, "⛔ יש להריץ את בדיקת הראיות רק בשיחה פרטית עם הבוט.", parse_mode=None)
+            return
+        try:
+            import state_manager
+
+            db = state_manager.load_db()
+            if not isinstance(db, dict) or not isinstance(db.get("ledger"), list):
+                bot.reply_to(message, "⛔ Ledger evidence BLOCKED — ledger unreadable; no changes made.", parse_mode=None)
+                return
+            ledger = db["ledger"]
+            windows = ((60, 70), (195, 205))
+            meta_keys = (
+                "source", "command", "position_id", "transfer_id", "purchase_id",
+                "item_id", "status", "ledger_domain", "asset", "request_id",
+            )
+            lines = [
+                "🔎 OWNER LEDGER SOURCE EVIDENCE — READ ONLY",
+                f"Ledger rows present: {len(ledger)}",
+                "Windows use zero-based ledger indexes, inclusive.",
+                "",
+            ]
+            seen_transfer_ids = set()
+            seen_purchase_ids = set()
+            for first, last in windows:
+                lines.append(f"WINDOW {first}–{last}")
+                for index in range(first, last + 1):
+                    if index >= len(ledger):
+                        lines.append(f"#{index}: OUT_OF_RANGE")
+                        continue
+                    row = ledger[index]
+                    if not isinstance(row, dict):
+                        lines.append(f"#{index}: MALFORMED_ROW")
+                        continue
+                    if str(row.get("uid") or "") != uid:
+                        lines.append(f"#{index}: other-account row; details withheld")
+                        continue
+                    reason = _safe_report_fragment(row.get("reason"), 64)
+                    lines.append(
+                        f"#{index} time={_safe_report_fragment(row.get('time'), 48)} "
+                        f"reason={reason} before={_safe_report_fragment(row.get('before'), 32)} "
+                        f"amount={_safe_report_fragment(row.get('amount'), 32)} "
+                        f"after={_safe_report_fragment(row.get('after'), 32)}"
+                    )
+                    meta = row.get("meta")
+                    meta = meta if isinstance(meta, dict) else {}
+                    safe_meta = []
+                    for key in meta_keys:
+                        value = meta.get(key)
+                        if value is None or isinstance(value, (dict, list, tuple)):
+                            continue
+                        rendered = _safe_report_fragment(value, 80)
+                        if rendered != "—":
+                            safe_meta.append(f"{key}={rendered}")
+                    if safe_meta:
+                        lines.append("  meta: " + " · ".join(safe_meta))
+                    transfer_id = str(meta.get("transfer_id") or "").strip()
+                    purchase_id = str(meta.get("purchase_id") or "").strip()
+                    if transfer_id:
+                        seen_transfer_ids.add(transfer_id)
+                    if purchase_id:
+                        seen_purchase_ids.add(purchase_id)
+                lines.append("")
+            purchases = db.get("purchases")
+            purchases = purchases if isinstance(purchases, dict) else {}
+            for purchase_id in sorted(seen_purchase_ids):
+                purchase = purchases.get(purchase_id)
+                if not isinstance(purchase, dict):
+                    lines.append(f"PURCHASE {purchase_id}: record not found")
+                    continue
+                lines.append(
+                    f"PURCHASE {purchase_id}: status={_safe_report_fragment(purchase.get('status'), 24)} "
+                    f"item={_safe_report_fragment(purchase.get('item_id'), 48)} "
+                    f"price={_safe_report_fragment(purchase.get('price'), 24)} "
+                    f"seller_payout={_safe_report_fragment(purchase.get('seller_payout'), 24)} "
+                    f"commission={_safe_report_fragment(purchase.get('commission'), 24)} "
+                    f"created_at={_safe_report_fragment(purchase.get('created_at'), 48)}"
+                )
+            if seen_transfer_ids:
+                transfer_rows = 0
+                for row in ledger:
+                    if not isinstance(row, dict):
+                        continue
+                    meta = row.get("meta")
+                    if isinstance(meta, dict) and str(meta.get("transfer_id") or "") in seen_transfer_ids:
+                        transfer_rows += 1
+                processed = db.get("processed_transfers")
+                processed = processed if isinstance(processed, dict) else {}
+                processed_matches = sum(
+                    1 for value in processed.values()
+                    if str(value or "") in seen_transfer_ids
+                )
+                lines += [
+                    "",
+                    f"TRANSFER CONTEXT: matched_ledger_rows={transfer_rows} "
+                    f"processed_keys_matching={processed_matches}",
+                ]
+            lines += [
+                "",
+                "This report exposes detailed values only for the owner’s own ledger rows.",
+                "🔒 Read-only: no DB, ledger, balances, wallets, staking positions, or gates changed.",
+            ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"⛔ Ledger evidence query failed safely: {type(exc).__name__}; no changes made.",
+                parse_mode=None,
+            )
+
     @bot.message_handler(commands=["check_owner_ledger"])
     def check_owner_ledger_cmd(message):
         uid = str(message.from_user.id)
