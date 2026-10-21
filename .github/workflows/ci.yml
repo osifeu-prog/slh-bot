@@ -171,6 +171,8 @@ jobs:
           python -m unittest tests.test_mqtt_listener tests.test_mcp_mqtt -v
           echo "MQTT listener + MCP status contracts: OK"
 
+      - name: Verify Alpha consolidation source-clearance guard
+        run: python -m unittest tests.test_alpha_consolidation_guard -v
       - name: Run read-only revenue recovery audit tests
         run: |
           python -m unittest tests.test_revenue_recovery_audit -v
