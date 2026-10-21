@@ -72,6 +72,13 @@ def next_fire_time(hhmm, now=None):
 
 def _bot_key(bot):
     token = str(getattr(bot, "token", "") or "").strip()
+    if token and ":" in token:
+        # Telegram bot tokens start with the stable numeric bot ID. Use that
+        # identity rather than the secret portion so token rotation preserves
+        # ownership of an already scheduled alarm.
+        bot_id = token.split(":", 1)[0]
+        if bot_id.isdigit():
+            return f"telegram-bot:{bot_id}"
     if token:
         return hashlib.sha256(token.encode("utf-8")).hexdigest()
     return f"process-local:{id(bot)}"
@@ -94,10 +101,12 @@ def schedule_alarm(chat_id, hhmm, now=None, bot_key=None):
 
 
 def disable_alarm():
-    data = load_state()
-    data.update({"enabled": False, "disabled_at": datetime.now(timezone.utc).isoformat()})
-    save_state(data)
-    return data
+    # Make the read-modify-write atomic relative to due delivery and rescheduling.
+    with _LOCK:
+        data = load_state()
+        data.update({"enabled": False, "disabled_at": datetime.now(timezone.utc).isoformat()})
+        save_state(data)
+        return data
 
 
 def _morning_message():
