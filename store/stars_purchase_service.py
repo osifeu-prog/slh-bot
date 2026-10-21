@@ -11,6 +11,18 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _whatsapp_cashback(uid, purchase_id, stars_paid, item_id):
+    try:
+        from core.commerce_loyalty import grant_whatsapp_cashback
+        return grant_whatsapp_cashback(
+            uid, purchase_id, stars_paid, "XTR", sku=item_id
+        )
+    except Exception as exc:
+        # Payment and fulfillment are already committed; retries can safely
+        # reconcile the separately idempotent cashback award.
+        return {"status": "PENDING", "error": type(exc).__name__}
+
+
 def get_stars_price(item_id):
     item = load_items().get(str(item_id).strip())
     if not isinstance(item, dict):
@@ -219,7 +231,8 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
             uid=uid,
             meta={"kind": "telegram_stars_item", "item_id": item_id},
         )
-        return {"status": "DUPLICATE", "order_id": order_id, "item_id": item_id}
+        cashback = _whatsapp_cashback(uid, order_id, stars_paid, item_id)
+        return {"status": "DUPLICATE", "order_id": order_id, "item_id": item_id, "cashback": cashback}
 
     try:
         fulfillment = apply_grant(uid, item.get("grant", {}), purchase_id=order_id)
@@ -267,4 +280,12 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
         uid=uid,
         meta={"kind": "telegram_stars_item", "item_id": item_id},
     )
-    return {"status": "SUCCESS", "order_id": order_id, "item_id": item_id, "stars": stars_paid, "fulfillment": finalized.get("fulfillment")}
+    cashback = _whatsapp_cashback(uid, order_id, stars_paid, item_id)
+    return {
+        "status": "SUCCESS",
+        "order_id": order_id,
+        "item_id": item_id,
+        "stars": stars_paid,
+        "fulfillment": finalized.get("fulfillment"),
+        "cashback": cashback,
+    }

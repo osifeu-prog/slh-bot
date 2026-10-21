@@ -48,6 +48,13 @@ def _persist_referral(uid, ref_uid):
         referral["referred_by"] = ref_uid
         referral["referred_at"] = __import__("datetime").datetime.utcnow().isoformat()
 
+        events = db.get("referral_start_events")
+        event = events.get(uid) if isinstance(events, dict) else None
+        source = str(event.get("source") or "") if isinstance(event, dict) else ""
+        if source == "whatsapp":
+            referral["source"] = "whatsapp"
+            user.setdefault("acquisition_channel", "whatsapp")
+
         ref_profile = referrer.setdefault("referral", {})
         ref_profile["count"] = int(ref_profile.get("count", 0) or 0) + 1
         return True

@@ -9,6 +9,7 @@ from core.stars_price_authority import (
     CREDIT_PACKS_BY_ID,
     TELEGRAM_STARS_CURRENCY,
     VIP_MONTHLY_STARS,
+    VIP_ANNUAL_STARS,
     VIP_SUBSCRIPTION_PERIOD,
     resolve_credit_pack,
 )
@@ -48,16 +49,33 @@ def _create_vip_invoice_link(bot, uid):
 
 
 def _send_vip_invoice(bot, chat_id, uid):
-    """Open a recurring Stars subscription using Telegram's invoice-link API."""
+    """Open a recurring Stars subscription using the supported Telegram invoice-link API."""
     link = _create_vip_invoice_link(bot, uid)
     markup = InlineKeyboardMarkup(row_width=1)
-    markup.add(InlineKeyboardButton(text="⭐ פתיחת מנוי VIP — 499 Stars", url=link))
+    markup.add(InlineKeyboardButton(text="⭐ פתיחת מנוי VIP — 499 Stars לחודש", url=link))
     bot.send_message(
         chat_id,
-        "⭐ מנוי VIP מוכן לתשלום דרך Telegram Stars.",
+        "⭐ מנוי VIP חודשי מוכן לתשלום דרך Telegram Stars.",
         reply_markup=markup,
     )
     return "invoice_link"
+
+
+def _send_vip_annual_invoice(bot, chat_id, uid):
+    """Create a one-time annual Stars invoice; this is not auto-renewing."""
+    name = "SLH VIP Annual"
+    bot.send_invoice(
+        chat_id=chat_id,
+        title=name,
+        description="SLH VIP לשנה אחת — 4,990 Stars, תשלום חד־פעמי ללא חידוש אוטומטי.",
+        invoice_payload=f"vip_annual_{uid}",
+        provider_token="",
+        currency=TELEGRAM_STARS_CURRENCY,
+        prices=[LabeledPrice(label=name, amount=VIP_ANNUAL_STARS)],
+        start_parameter="vip-annual",
+        is_flexible=False,
+    )
+    return "invoice"
 
 
 def _send_pay_menu(bot, chat_id, uid):
@@ -271,6 +289,14 @@ def register_payment_handlers(bot):
     @bot.message_handler(commands=['vip'])
     def vip_command(m):
         uid = str(m.from_user.id)
+        parts = (m.text or "").split(maxsplit=1)
+        if len(parts) > 1 and parts[1].strip().lower() in {"annual", "yearly", "שנתי"}:
+            try:
+                _send_vip_annual_invoice(bot, m.chat.id, uid)
+            except Exception as exc:
+                print(f"[VIP] annual invoice error: {type(exc).__name__}")
+                bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את רכישת ה־VIP השנתי.")
+            return
         db = state_manager.load_db()
         user = db.get("users", {}).get(uid, {})
         until = int(user.get("vip_access_until", 0) or 0)
@@ -283,6 +309,39 @@ def register_payment_handlers(bot):
         except Exception as e:
             print(f"[VIP] invoice error: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
+
+
+    @bot.message_handler(commands=['vipcredits'])
+    def vipcredits_command(m):
+        from core.vip_credits_service import purchase_vip_month_with_credits
+        uid = str(m.from_user.id)
+        result = purchase_vip_month_with_credits(uid)
+        status = str(result.get("status") or "")
+        if status == "APPLIED":
+            expiry = int(result.get("vip_access_until") or 0)
+            import time
+            until = time.strftime("%Y-%m-%d", time.gmtime(expiry))
+            bot.send_message(
+                m.chat.id,
+                "✅ VIP הופעל ל־30 ימים תמורת 150 Credits.\n"
+                f"פעיל עד: {until}\n"
+                "זהו תשלום ידני ללא חידוש אוטומטי. לחידוש לאחר הפקיעה: /vipcredits",
+            )
+        elif status == "ACTIVE":
+            import time
+            expiry = int(result.get("vip_access_until") or 0)
+            until = time.strftime("%Y-%m-%d", time.gmtime(expiry))
+            bot.send_message(m.chat.id, f"ℹ️ VIP כבר פעיל עד {until}. לא חויבת שוב.")
+        elif status == "INSUFFICIENT_CREDITS":
+            balance = result.get("credits_balance", 0)
+            bot.send_message(
+                m.chat.id,
+                f"❌ נדרשים 150 Credits ל־VIP לחודש. היתרה הנוכחית: {balance} Credits.",
+            )
+        elif status == "USER_NOT_FOUND":
+            bot.send_message(m.chat.id, "❌ יש לבצע /join לפני רכישת VIP.")
+        else:
+            bot.send_message(m.chat.id, "⚠️ לא ניתן להשלים את רכישת ה־VIP בבטחה כרגע.")
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
@@ -345,6 +404,19 @@ def register_payment_handlers(bot):
                 bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid item price.")
             return
 
+        if raw == f"vip_annual_{query.from_user.id}":
+            try:
+                valid_amount = int(query.total_amount) == VIP_ANNUAL_STARS
+            except (TypeError, ValueError):
+                valid_amount = False
+            if query.currency == TELEGRAM_STARS_CURRENCY and valid_amount:
+                bot.answer_pre_checkout_query(query.id, ok=True)
+            else:
+                bot.answer_pre_checkout_query(
+                    query.id, ok=False, error_message="Invalid annual VIP price."
+                )
+            return
+
         if raw == f"vip_monthly_{query.from_user.id}":
             try:
                 valid_amount = int(query.total_amount) == VIP_MONTHLY_STARS
@@ -380,6 +452,76 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         payment = m.successful_payment
         payload = str(payment.invoice_payload or "")
+
+        if payload == f"vip_annual_{uid}":
+            charge_id = str(payment.telegram_payment_charge_id or "").strip()
+            if (
+                payment.currency != TELEGRAM_STARS_CURRENCY
+                or int(payment.total_amount) != VIP_ANNUAL_STARS
+                or not charge_id
+            ):
+                bot.send_message(m.chat.id, "❌ תשלום VIP שנתי לא תקין.")
+                return
+            try:
+                result = stars_payment_authority.record_vip_subscription_payment(
+                    uid=uid,
+                    stars_paid=payment.total_amount,
+                    charge_id=charge_id,
+                    recurring=False,
+                    first_recurring=False,
+                    annual=True,
+                )
+            except ValueError as exc:
+                print(f"[VIP] annual authority rejected payment: {type(exc).__name__}")
+                bot.send_message(m.chat.id, "❌ תשלום VIP שנתי לא תקין.")
+                return
+
+            if result.get("status") == "conflict":
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ קיימת אי־התאמה ברישום התשלום. לא בוצעה הפעלה נוספת. "
+                    "אל תשלם שוב; פנה ל-/paysupport.",
+                )
+                return
+
+            if result["status"] == "duplicate":
+                message = "ℹ️ תשלום VIP שנתי זה כבר עובד. המנוי נשמר עד מועד הפקיעה."
+            elif result.get("launch_offer_qualified") and result.get("fulfillment_status") == "completed":
+                message = (
+                    "✅ VIP שנתי הופעל ל־12 חודשים תמורת 4,990 Stars.\n"
+                    "🎁 חבילת ההשקה הופעלה לפי תנאיה.\n"
+                    "💳 התשלום חד־פעמי וללא חידוש אוטומטי."
+                )
+            else:
+                message = (
+                    "✅ VIP שנתי הופעל ל־12 חודשים תמורת 4,990 Stars.\n"
+                    "⚠️ הטבות ההשקה ממתינות להשלמה אוטומטית.\n"
+                    "💳 התשלום חד־פעמי וללא חידוש אוטומטי."
+                )
+
+            loyalty_rewards = result.get("loyalty_rewards") or {}
+            referral_rewards = loyalty_rewards.get("referral") or {}
+            newbie_bonus = referral_rewards.get("new_buyer_bonus") or {}
+            referral_commission = referral_rewards.get("referrer_commission") or {}
+            if newbie_bonus.get("status") == "APPLIED":
+                message += "\n🎁 בונוס לקוח VIP שהגיע מהפניה: 25 Credits."
+            if referral_commission.get("status") == "APPLIED":
+                referrer_uid = str(referral_rewards.get("referrer_uid") or "").strip()
+                try:
+                    if referrer_uid.isdigit() and referrer_uid != uid:
+                        bot.send_message(
+                            int(referrer_uid),
+                            "👥 הופעלה רכישת VIP שנתית דרך ההפניה שלך. "
+                            f"זוכית ב־{referral_commission.get('credits')} Credits "
+                            "עמלת הפניה (10% ממחיר ה־Stars, מומרת ל־Credits).",
+                        )
+                except Exception as exc:
+                    print(f"[VIP] annual referral notification failed: {type(exc).__name__}")
+            cashback = loyalty_rewards.get("whatsapp_cashback") or {}
+            if cashback.get("status") == "APPLIED":
+                message += f"\n💚 החזר WhatsApp: {cashback.get('credits')} Credits."
+            bot.send_message(m.chat.id, message)
+            return
 
         if payload == f"vip_monthly_{uid}":
             import time
@@ -426,8 +568,28 @@ def register_payment_handlers(bot):
                     "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי.\n"
                     "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
                 )
+            loyalty_rewards = result.get("loyalty_rewards") or {}
+            referral_rewards = loyalty_rewards.get("referral") or {}
+            newbie_bonus = referral_rewards.get("new_buyer_bonus") or {}
+            referral_commission = referral_rewards.get("referrer_commission") or {}
+            if newbie_bonus.get("status") == "APPLIED":
+                message += "\n🎁 בונוס לקוח VIP שהגיע מהפניה: 25 Credits."
+            if referral_commission.get("status") == "APPLIED":
+                referrer_uid = str(referral_rewards.get("referrer_uid") or "").strip()
+                try:
+                    if referrer_uid.isdigit() and referrer_uid != uid:
+                        bot.send_message(
+                            int(referrer_uid),
+                            "👥 הופעלה רכישת VIP דרך ההפניה שלך. "
+                            f"זוכית ב־{referral_commission.get('credits')} Credits "
+                            "עמלת הפניה (10% ממחיר ה־Stars, מומרת ל־Credits).",
+                        )
+                except Exception as exc:
+                    print(f"[VIP] referral notification failed: {type(exc).__name__}")
+            cashback = loyalty_rewards.get("whatsapp_cashback") or {}
+            if cashback.get("status") == "APPLIED":
+                message += f"\n💚 החזר WhatsApp: {cashback.get('credits')} Credits."
             bot.send_message(m.chat.id, message)
-            return
             return
 
         if payload.startswith("item_") and payload.endswith("_" + uid):
@@ -466,9 +628,14 @@ def register_payment_handlers(bot):
             if result["status"] == "RECOVERABLE":
                 bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
                 return
+            cashback = result.get("cashback") or {}
+            cashback_line = (
+                f"\n🎁 WhatsApp cashback: {cashback.get('credits')} Credits."
+                if cashback.get("status") == "APPLIED" else ""
+            )
             bot.send_message(m.chat.id, "✅ Payment received and item fulfilled.\n"
                               f"Item: {item_id}\nStars: {payment.total_amount}\n"
-                              f"Ref: {payment.telegram_payment_charge_id[:12]}")
+                              f"Ref: {payment.telegram_payment_charge_id[:12]}{cashback_line}")
             return
 
         parts = payload.split("_")

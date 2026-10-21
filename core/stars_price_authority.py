@@ -9,7 +9,9 @@ from dataclasses import dataclass
 
 TELEGRAM_STARS_CURRENCY = "XTR"
 VIP_MONTHLY_STARS = 499
+VIP_ANNUAL_STARS = 4990
 VIP_SUBSCRIPTION_PERIOD = 2592000
+VIP_ANNUAL_PERIOD = 365 * 24 * 60 * 60
 
 
 @dataclass(frozen=True)

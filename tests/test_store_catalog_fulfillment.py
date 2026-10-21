@@ -24,13 +24,27 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
             "emoji_slh": ("digital", "emoji_slh"),
             "emoji_vip": ("digital", "emoji_vip"),
             "agent_os": ("plugin", "agent_os"),
-            "esp32_pro": ("hardware", "esp32_pro"),
             "esp32_standard": ("hardware", "esp32_standard"),
         }
         self.assertTrue(set(expected).issubset(set(self.items)))
         for item_id, (grant_type, value) in expected.items():
             item = self.items[item_id]
             self.assertEqual(item["grant"], {grant_type: value})
+
+        self.assertEqual(
+            self.items["esp32_pro"]["grant"],
+            {
+                "bundle": [{"plugin": "agent_os"}, {"hardware": "esp32_pro"}],
+                "vip_months_bonus": 3,
+            },
+        )
+        from store.purchase_service import _validate_item
+        self.assertIsNone(_validate_item(self.items["esp32_pro"]))
+        investor_bundle = self.items["slh_investor_bundle"]
+        self.assertEqual(investor_bundle["price_stars"], 899)
+        self.assertEqual(len(investor_bundle["grant"]["bundle"]), 8)
+        self.assertEqual(investor_bundle["grant"]["credits_bonus"], 50)
+        self.assertEqual(investor_bundle["grant"]["vip_months_bonus"], 1)
 
     def test_course_grant_enrolls_in_academy(self):
         with patch("store.grant_engine.profile_manager.get_user", return_value={}),              patch("core.academy_manager.start_course", return_value=True) as start_course:
