@@ -1,4 +1,5 @@
 """Owner-only, persistent one-shot alarm for the SLH Telegram bot."""
+import hashlib
 import json
 import os
 import tempfile
@@ -13,6 +14,7 @@ TZ_NAME = os.getenv("SLH_TIMEZONE", "Asia/Jerusalem")
 TZ = ZoneInfo(TZ_NAME)
 _LOCK = threading.RLock()
 _SCHEDULER_STARTED = False
+_SCHEDULER_BOTS = {}
 
 
 def state_path():
@@ -68,11 +70,27 @@ def next_fire_time(hhmm, now=None):
     return target
 
 
-def schedule_alarm(chat_id, hhmm, now=None):
+def _bot_key(bot):
+    token = str(getattr(bot, "token", "") or "").strip()
+    if token and ":" in token:
+        # Telegram bot tokens start with the stable numeric bot ID. Use that
+        # identity rather than the secret portion so token rotation preserves
+        # ownership of an already scheduled alarm.
+        bot_id = token.split(":", 1)[0]
+        if bot_id.isdigit():
+            return f"telegram-bot:{bot_id}"
+    if token:
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return f"process-local:{id(bot)}"
+
+
+def schedule_alarm(chat_id, hhmm, now=None, bot_key=None):
     target = next_fire_time(hhmm, now=now)
     data = {
         "enabled": True,
         "chat_id": int(chat_id),
+        "bot_key": bot_key,
+        "attempts": 0,
         "fire_at": target.astimezone(timezone.utc).isoformat(),
         "timezone": TZ_NAME,
         "local_time": target.strftime("%Y-%m-%d %H:%M"),
@@ -83,10 +101,12 @@ def schedule_alarm(chat_id, hhmm, now=None):
 
 
 def disable_alarm():
-    data = load_state()
-    data.update({"enabled": False, "disabled_at": datetime.now(timezone.utc).isoformat()})
-    save_state(data)
-    return data
+    # Make the read-modify-write atomic relative to due delivery and rescheduling.
+    with _LOCK:
+        data = load_state()
+        data.update({"enabled": False, "disabled_at": datetime.now(timezone.utc).isoformat()})
+        save_state(data)
+        return data
 
 
 def _morning_message():
@@ -113,22 +133,70 @@ def _morning_message():
     return "\n".join(lines)
 
 
-def _scheduler_loop(bot):
+def _deliver_due_alarm(now=None):
+    """Attempt a due alarm with persisted retry state; delivery is at-least-once."""
+    # Serialize the full state transition with /alarm_set and /alarm_off. Holding
+    # this re-entrant lock during send_message prevents a stale delivery snapshot
+    # from overwriting a newer alarm configured while Telegram is responding.
+    with _LOCK:
+        data = load_state()
+        if not data.get("enabled") or not data.get("fire_at"):
+            return "not_due"
+
+        current = now or datetime.now(timezone.utc)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        current = current.astimezone(timezone.utc)
+        due = datetime.fromisoformat(data["fire_at"])
+        if due.tzinfo is None:
+            due = due.replace(tzinfo=timezone.utc)
+        if current < due.astimezone(timezone.utc):
+            return "not_due"
+
+        retry_value = data.get("next_attempt_at")
+        if retry_value:
+            retry_at = datetime.fromisoformat(retry_value)
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=timezone.utc)
+            if current < retry_at.astimezone(timezone.utc):
+                return "retry_wait"
+
+        bot = _SCHEDULER_BOTS.get(data.get("bot_key"))
+        if bot is None:
+            data.update({
+                "attempts": int(data.get("attempts", 0)) + 1,
+                "last_attempt_at": current.isoformat(),
+                "next_attempt_at": (current + timedelta(minutes=1)).isoformat(),
+                "last_error": "ALARM_BOT_NOT_REGISTERED",
+            })
+            save_state(data)
+            return "bot_unavailable"
+
+        # Persist a retry deadline before the network call. If the process dies
+        # during delivery, the alarm remains enabled and retries after one minute.
+        data.update({
+            "attempts": int(data.get("attempts", 0)) + 1,
+            "last_attempt_at": current.isoformat(),
+            "next_attempt_at": (current + timedelta(minutes=1)).isoformat(),
+        })
+        save_state(data)
+        try:
+            bot.send_message(int(data["chat_id"]), _morning_message())
+        except Exception as exc:
+            data["last_error"] = type(exc).__name__
+            save_state(data)
+            print("[OWNER_ALARM] delivery failed; retry scheduled:", type(exc).__name__)
+            return "send_failed"
+
+        data.update({"enabled": False, "fired_at": current.isoformat()})
+        data.pop("next_attempt_at", None)
+        data.pop("last_error", None)
+        save_state(data)
+        return "sent"
+def _scheduler_loop():
     while True:
         try:
-            data = load_state()
-            if data.get("enabled") and data.get("fire_at"):
-                due = datetime.fromisoformat(data["fire_at"])
-                if due.tzinfo is None:
-                    due = due.replace(tzinfo=timezone.utc)
-                if datetime.now(timezone.utc) >= due.astimezone(timezone.utc):
-                    # Persist one-shot completion before sending to avoid duplicate alerts on restart.
-                    data.update({
-                        "enabled": False,
-                        "fired_at": datetime.now(timezone.utc).isoformat(),
-                    })
-                    save_state(data)
-                    bot.send_message(int(data["chat_id"]), _morning_message())
+            _deliver_due_alarm()
         except Exception as exc:
             print("[OWNER_ALARM] scheduler iteration failed:", type(exc).__name__)
         time.sleep(10)
@@ -136,11 +204,19 @@ def _scheduler_loop(bot):
 
 def start_scheduler(bot):
     global _SCHEDULER_STARTED
+    key = _bot_key(bot)
     with _LOCK:
+        _SCHEDULER_BOTS[key] = bot
+        # Older persisted alarms predate bot_key. Bind those pending alarms to
+        # the first registered bot so an upgrade does not strand the reminder.
+        data = load_state()
+        if data.get("enabled") and data.get("fire_at") and not data.get("bot_key"):
+            data["bot_key"] = key
+            save_state(data)
         if _SCHEDULER_STARTED:
             return
         _SCHEDULER_STARTED = True
-    thread = threading.Thread(target=_scheduler_loop, args=(bot,), name="slh-owner-alarm", daemon=True)
+    thread = threading.Thread(target=_scheduler_loop, name="slh-owner-alarm", daemon=True)
     thread.start()
 
 
@@ -197,7 +273,7 @@ def register(bot, context=None):
             bot.reply_to(message, "שימוש: /alarm_set HH:MM\nדוגמה: /alarm_set 07:00")
             return
         try:
-            data = schedule_alarm(message.chat.id, parts[1])
+            data = schedule_alarm(message.chat.id, parts[1], bot_key=_bot_key(bot))
         except ValueError:
             bot.reply_to(message, "שעה לא תקינה. השתמש בתבנית HH:MM, למשל 07:00.")
             return
@@ -228,7 +304,7 @@ def register(bot, context=None):
         if data.startswith(prefix):
             hhmm = data[len(prefix):]
             try:
-                saved = schedule_alarm(chat.id, hhmm)
+                saved = schedule_alarm(chat.id, hhmm, bot_key=_bot_key(bot))
             except ValueError:
                 bot.answer_callback_query(call.id, "שעה לא תקינה.")
                 return
