@@ -126,63 +126,64 @@ def _morning_message():
 
 def _deliver_due_alarm(now=None):
     """Attempt a due alarm with persisted retry state; delivery is at-least-once."""
-    data = load_state()
-    if not data.get("enabled") or not data.get("fire_at"):
-        return "not_due"
-
-    current = now or datetime.now(timezone.utc)
-    if current.tzinfo is None:
-        current = current.replace(tzinfo=timezone.utc)
-    current = current.astimezone(timezone.utc)
-    due = datetime.fromisoformat(data["fire_at"])
-    if due.tzinfo is None:
-        due = due.replace(tzinfo=timezone.utc)
-    if current < due.astimezone(timezone.utc):
-        return "not_due"
-
-    retry_value = data.get("next_attempt_at")
-    if retry_value:
-        retry_at = datetime.fromisoformat(retry_value)
-        if retry_at.tzinfo is None:
-            retry_at = retry_at.replace(tzinfo=timezone.utc)
-        if current < retry_at.astimezone(timezone.utc):
-            return "retry_wait"
-
+    # Serialize the full state transition with /alarm_set and /alarm_off. Holding
+    # this re-entrant lock during send_message prevents a stale delivery snapshot
+    # from overwriting a newer alarm configured while Telegram is responding.
     with _LOCK:
+        data = load_state()
+        if not data.get("enabled") or not data.get("fire_at"):
+            return "not_due"
+
+        current = now or datetime.now(timezone.utc)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        current = current.astimezone(timezone.utc)
+        due = datetime.fromisoformat(data["fire_at"])
+        if due.tzinfo is None:
+            due = due.replace(tzinfo=timezone.utc)
+        if current < due.astimezone(timezone.utc):
+            return "not_due"
+
+        retry_value = data.get("next_attempt_at")
+        if retry_value:
+            retry_at = datetime.fromisoformat(retry_value)
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=timezone.utc)
+            if current < retry_at.astimezone(timezone.utc):
+                return "retry_wait"
+
         bot = _SCHEDULER_BOTS.get(data.get("bot_key"))
-    if bot is None:
+        if bot is None:
+            data.update({
+                "attempts": int(data.get("attempts", 0)) + 1,
+                "last_attempt_at": current.isoformat(),
+                "next_attempt_at": (current + timedelta(minutes=1)).isoformat(),
+                "last_error": "ALARM_BOT_NOT_REGISTERED",
+            })
+            save_state(data)
+            return "bot_unavailable"
+
+        # Persist a retry deadline before the network call. If the process dies
+        # during delivery, the alarm remains enabled and retries after one minute.
         data.update({
             "attempts": int(data.get("attempts", 0)) + 1,
             "last_attempt_at": current.isoformat(),
             "next_attempt_at": (current + timedelta(minutes=1)).isoformat(),
-            "last_error": "ALARM_BOT_NOT_REGISTERED",
         })
         save_state(data)
-        return "bot_unavailable"
+        try:
+            bot.send_message(int(data["chat_id"]), _morning_message())
+        except Exception as exc:
+            data["last_error"] = type(exc).__name__
+            save_state(data)
+            print("[OWNER_ALARM] delivery failed; retry scheduled:", type(exc).__name__)
+            return "send_failed"
 
-    # Persist a retry deadline before the network call. If the process dies during
-    # delivery, the alarm remains enabled and is retried after this deadline.
-    data.update({
-        "attempts": int(data.get("attempts", 0)) + 1,
-        "last_attempt_at": current.isoformat(),
-        "next_attempt_at": (current + timedelta(minutes=1)).isoformat(),
-    })
-    save_state(data)
-    try:
-        bot.send_message(int(data["chat_id"]), _morning_message())
-    except Exception as exc:
-        data["last_error"] = type(exc).__name__
+        data.update({"enabled": False, "fired_at": current.isoformat()})
+        data.pop("next_attempt_at", None)
+        data.pop("last_error", None)
         save_state(data)
-        print("[OWNER_ALARM] delivery failed; retry scheduled:", type(exc).__name__)
-        return "send_failed"
-
-    data.update({"enabled": False, "fired_at": current.isoformat()})
-    data.pop("next_attempt_at", None)
-    data.pop("last_error", None)
-    save_state(data)
-    return "sent"
-
-
+        return "sent"
 def _scheduler_loop():
     while True:
         try:
@@ -197,6 +198,12 @@ def start_scheduler(bot):
     key = _bot_key(bot)
     with _LOCK:
         _SCHEDULER_BOTS[key] = bot
+        # Older persisted alarms predate bot_key. Bind those pending alarms to
+        # the first registered bot so an upgrade does not strand the reminder.
+        data = load_state()
+        if data.get("enabled") and data.get("fire_at") and not data.get("bot_key"):
+            data["bot_key"] = key
+            save_state(data)
         if _SCHEDULER_STARTED:
             return
         _SCHEDULER_STARTED = True
