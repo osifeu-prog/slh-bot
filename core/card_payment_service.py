@@ -452,9 +452,13 @@ def _verify_provider_transaction(order: dict, callback_body: dict) -> dict:
     amount = summary.get("amount")
     currency = summary.get("currency")
     expected_amount = _money(order.get("amount"))
-    if amount is not None and expected_amount is not None and amount != expected_amount:
+    if amount is None or expected_amount is None:
+        raise ValueError("PAYPLUS_AMOUNT_MISSING")
+    if amount != expected_amount:
         raise ValueError("PAYPLUS_AMOUNT_MISMATCH")
-    if currency and currency != "ILS":
+    if not currency:
+        raise ValueError("PAYPLUS_CURRENCY_MISSING")
+    if currency != "ILS":
         raise ValueError("PAYPLUS_CURRENCY_MISMATCH")
 
     tx_uid = summary.get("transaction_uid") or transaction_uid
@@ -713,7 +717,15 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
 
                 amount = summary.get("amount")
                 expected_amount = _money(current.get("amount"))
-                if amount is not None and expected_amount is not None and amount != expected_amount:
+                if amount is None or expected_amount is None:
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_AMOUNT_MISSING",
+                        updated_at=time.time(),
+                    )
+                    continue
+                if amount != expected_amount:
                     _update_order(
                         current["order_id"],
                         status="RECOVERABLE",
@@ -723,7 +735,15 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
                     continue
 
                 currency = summary.get("currency")
-                if currency and currency != "ILS":
+                if not currency:
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_CURRENCY_MISSING",
+                        updated_at=time.time(),
+                    )
+                    continue
+                if currency != "ILS":
                     _update_order(
                         current["order_id"],
                         status="RECOVERABLE",
