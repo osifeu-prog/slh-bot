@@ -52,7 +52,7 @@ class AlphaConsolidationSourceClearanceGuardTests(unittest.TestCase):
         self.assertEqual(result["status"], "BLOCKED")
         self.assertEqual(result["continuity_break_count"], 1)
         finding = result["findings"][0]
-        self.assertEqual(finding["type"], "RECONCILED_ALPHA_CONSOLIDATION")
+        self.assertEqual(finding["type"], "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE")
         self.assertFalse(finding["reconciled"])
         evidence = finding["source_evidence"]
         self.assertFalse(evidence["resolves_gap"])
