@@ -109,3 +109,27 @@ def test_card_recovery_loop_starts_only_one_thread(monkeypatch):
     second = cards.start_card_recovery_loop()
     assert first is second
     assert len(FakeThread.instances) == 1
+
+
+def test_fulfilled_callback_replay_nonapproved_does_not_cancel_order(monkeypatch):
+    order = {**ORDER, "status": "FULFILLED", "transaction_uid": "tx-test"}
+    monkeypatch.setattr(cards, "_require_card_config", lambda: None)
+    monkeypatch.setattr(cards, "_validate_callback", lambda *_args: True)
+    monkeypatch.setattr(cards, "_find_order", lambda *_args: order)
+    monkeypatch.setattr(
+        cards,
+        "_verify_provider_transaction",
+        lambda *_args: (_ for _ in ()).throw(ValueError("PAYPLUS_PAYMENT_NOT_APPROVED")),
+    )
+    from unittest.mock import Mock
+    update = Mock()
+    release = Mock()
+    fulfill = Mock()
+    monkeypatch.setattr(cards, "_update_order", update)
+    monkeypatch.setattr(cards, "_release_inventory", release)
+    monkeypatch.setattr(cards, "_fulfill", fulfill)
+    with pytest.raises(ValueError, match="PAYPLUS_PAYMENT_NOT_APPROVED"):
+        cards.handle_payplus_callback({"more_info": "card:test"}, "signed", "PayPlus")
+    update.assert_not_called()
+    release.assert_not_called()
+    fulfill.assert_not_called()
