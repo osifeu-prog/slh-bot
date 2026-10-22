@@ -293,7 +293,7 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
 
-def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits_gap():
+def test_historical_alpha_staked_component_does_not_resolve_credits_gap():
     target_uid = "8789977826"
     source_uid = "8791275334"
     db = {
@@ -321,25 +321,26 @@ def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits
 
     result = audit_account_ledger(db, target_uid)
 
-    assert result["status"] == "PASS"
-    assert result["continuity_break_count"] == 0
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
     assert result["observed_discontinuity_count"] == 1
-    assert result["resolved_gap_count"] == 1
-    assert result["blocking_finding_count"] == 0
+    assert result["resolved_gap_count"] == 0
+    assert result["blocking_finding_count"] == 1
     assert result["current_balance_matches_tail"] is True
     finding = result["findings"][0]
-    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
-    assert finding["reconciled"] is True
+    assert finding["type"] == "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
+    assert finding["reconciled"] is False
+    assert finding["delta_to_explain"] == 10499.0
     evidence = finding["source_evidence"]
-    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
-    assert evidence["resolves_gap"] is True
+    assert evidence["resolves_gap"] is False
     consolidation = evidence["alpha_consolidations"][0]
     assert consolidation["credits_component"] == 10449
     assert consolidation["staked_moved_component"] == 50
     assert consolidation["observed_balance_delta"] == 10499
+    assert consolidation["credits_component_matches_delta"] is False
     assert consolidation["credits_plus_staked_matches_delta"] is True
-    assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
-    assert consolidation["verification_failures"] == []
+    assert "credits_component_matches_delta" in consolidation["verification_failures"]
+    assert consolidation["source_commit"] is None
     assert db == before
 
 
@@ -417,7 +418,10 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     evidence = result["findings"][0]["source_evidence"]
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == [
+        "credits_component_matches_delta",
+        "source_account_cleared",
+    ]
     assert db == before
 
 
