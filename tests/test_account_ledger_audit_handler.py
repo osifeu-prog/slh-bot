@@ -255,7 +255,7 @@ def test_ledger_evidence_command_is_private_owner_only_and_redacts_other_account
                 "created_at": "2026-10-05T16:19:45+00:00", "buyer_uid": "PRIVATE_OTHER_UID",
             },
         },
-        "processed_transfers": {"processed:owner:test": "TRANSFER-owner-test"},
+        "processed_transfers": {"processed:owner:test": {"transfer_id": "TRANSFER-owner-test", "sender_uid": OWNER_UID, "recipient_uid": "PRIVATE_OTHER_UID", "amount": 1.0}},
     }
     before = __import__("copy").deepcopy(db)
     with patch("state_manager.load_db", return_value=db):
@@ -264,6 +264,7 @@ def test_ledger_evidence_command_is_private_owner_only_and_redacts_other_account
     assert "OWNER LEDGER SOURCE EVIDENCE — READ ONLY" in output
     assert "source=giveme" in output
     assert "TRANSFER-owner-test" in output
+    assert "processed_records_matching=1" in output
     assert "seller_payout=0.9" in output
     assert "other-account row; details withheld" in output
     assert "PRIVATE_OTHER_UID" not in output
