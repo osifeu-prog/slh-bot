@@ -337,31 +337,22 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
             
-            # FIX: Check if source was 0 immediately after alpha (Row 53 before=0 proves it)
-            # Source got 20 credits in Row 53 with before=0, so it was 0 after Row 2, now has 5 after spending 15
-            source_was_zero_after_alpha = False
-            try:
-                for r in db.get("ledger", []):
-                    if not isinstance(r, dict):
-                        continue
-                    if str(r.get("uid") or "") == source_uid:
-                        b = _number(r.get("before"))
-                        if b is not None and abs(b) <= EPSILON:
-                            source_was_zero_after_alpha = True
-                            break
-            except Exception:
-                source_was_zero_after_alpha = False
-
-            if isinstance(source_user, dict):
-                source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
-                source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
+            # Fail closed: a zero-before row anywhere in the source account's
+            # history is not proof that the source wallet was cleared by this
+            # specific consolidation. Require the current source wallet to be
+            # explicitly present and zero in both Credits and staked counters.
+            # Historical source-state verification must come from a separately
+            # validated snapshot, not an unrelated ledger row.
+            if isinstance(source_user, dict) and isinstance(source_wallet, dict):
+                source_credits = _number(source_wallet.get("credits"))
+                source_staked = _number(source_wallet.get("staked"))
                 source_account_cleared = (
-                    (source_credits is not None and source_staked is not None
-                     and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON)
-                    or source_was_zero_after_alpha
+                    source_credits is not None and source_staked is not None
+                    and abs(source_credits) <= EPSILON
+                    and abs(source_staked) <= EPSILON
                 )
             else:
-                source_account_cleared = True
+                source_account_cleared = False
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
@@ -387,9 +378,13 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     next_before is not None
                     and abs(next_before - verified["next_before"]) <= EPSILON
                 ),
-                "combined_delta_matches": (
-                    observed_delta is not None
-                    and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                # Staked is a separate counter, never part of the Credits
+                # continuity delta. The event can resolve a Credits gap only
+                # when its Credits component alone matches the observed delta.
+                "credits_component_matches_delta": (
+                    credits_component is not None
+                    and observed_delta is not None
+                    and abs(credits_component - observed_delta) <= EPSILON
                 ),
                 "source_account_cleared": source_account_cleared,
             }
