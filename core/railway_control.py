@@ -140,7 +140,7 @@ def projects():
                 projects { edges { node { id name } } }
               }
             }
-        """, {"id": workspace_id})
+        """, {"id": workspace_id}, prefer_account_token=True)
         workspace = data.get("workspace") or {}
         return [x["node"] for x in workspace.get("projects", {}).get("edges", [])]
 
