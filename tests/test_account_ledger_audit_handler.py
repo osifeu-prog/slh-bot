@@ -218,3 +218,66 @@ def test_owner_ledger_bundle_includes_staking_review_and_exchange_gate(monkeypat
     assert "Public trading gate: CLOSED" in output
     assert "Exchange verdict: BLOCKED" in output
     assert db == before
+
+
+
+def test_ledger_evidence_command_is_private_owner_only_and_redacts_other_accounts(monkeypatch):
+    bot = _register(monkeypatch)
+    ledger = [{} for _ in range(206)]
+    ledger[65] = {
+        "time": "2026-09-09T17:35:55.403916+00:00", "uid": OWNER_UID,
+        "before": 0.0, "amount": 50.0, "after": 50.0,
+        "reason": "admin:test_grant", "meta": {"source": "giveme", "command": "giveme"},
+    }
+    ledger[199] = {
+        "time": "2026-10-05T14:57:50+00:00", "uid": OWNER_UID,
+        "before": 2.191775, "amount": -1.0, "after": 1.191775,
+        "reason": "p2p:transfer_sent",
+        "meta": {"transfer_id": "TRANSFER-owner-test", "recipient_uid": "PRIVATE_OTHER_UID"},
+    }
+    ledger[200] = {
+        "time": "2026-10-05T14:57:50+00:00", "uid": "PRIVATE_OTHER_UID",
+        "before": 999.0, "amount": 888.0, "after": 111.0,
+        "reason": "private:other_account", "meta": {"purchase_id": "SECRET_PURCHASE"},
+    }
+    ledger[202] = {
+        "time": "2026-10-05T16:19:45+00:00", "uid": OWNER_UID,
+        "before": 6.191775, "amount": 0.9, "after": 7.091775,
+        "reason": "store:p2p_sale",
+        "meta": {"purchase_id": "purchase:owner:test", "item_id": "market_smoke"},
+    }
+    db = {
+        "ledger": ledger,
+        "purchases": {
+            "purchase:owner:test": {
+                "status": "FULFILLED", "item_id": "market_smoke", "price": 1.0,
+                "seller_payout": 0.9, "commission": 0.1,
+                "created_at": "2026-10-05T16:19:45+00:00", "buyer_uid": "PRIVATE_OTHER_UID",
+            },
+        },
+        "processed_transfers": {"processed:owner:test": {"transfer_id": "TRANSFER-owner-test", "sender_uid": OWNER_UID, "recipient_uid": "PRIVATE_OTHER_UID", "amount": 1.0}},
+    }
+    before = __import__("copy").deepcopy(db)
+    with patch("state_manager.load_db", return_value=db):
+        bot.handlers["check_ledger_evidence"](_message("/check_ledger_evidence"))
+    output = bot.replies[-1]
+    assert "OWNER LEDGER SOURCE EVIDENCE — READ ONLY" in output
+    assert "source=giveme" in output
+    assert "TRANSFER-owner-test" in output
+    assert "processed_records_matching=1" in output
+    assert "seller_payout=0.9" in output
+    assert "other-account row; details withheld" in output
+    assert "PRIVATE_OTHER_UID" not in output
+    assert "SECRET_PURCHASE" not in output
+    assert "999.0" not in output
+    assert "no DB, ledger, balances, wallets, staking positions, or gates changed" in output
+    assert db == before
+
+
+def test_ledger_evidence_command_rejects_non_owner_and_non_private_chat(monkeypatch):
+    bot = _register(monkeypatch)
+    with patch("state_manager.load_db") as load_db:
+        bot.handlers["check_ledger_evidence"](_message("/check_ledger_evidence", uid="5010371391"))
+        bot.handlers["check_ledger_evidence"](_message("/check_ledger_evidence", chat_type="group"))
+    load_db.assert_not_called()
+    assert "שיחה פרטית" in bot.replies[-1]
