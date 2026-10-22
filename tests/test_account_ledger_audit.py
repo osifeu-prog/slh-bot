@@ -416,7 +416,10 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     evidence = result["findings"][0]["source_evidence"]
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == [
+        "credits_component_matches_delta",
+        "source_account_cleared",
+    ]
     assert db == before
 
 
