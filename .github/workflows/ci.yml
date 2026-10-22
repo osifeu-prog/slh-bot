@@ -125,6 +125,9 @@ jobs:
           set -e
           python -m core.alpha_control_plane
 
+      - name: Test Railway workspace authentication
+        run: python -m unittest tests.test_railway_workspace_auth -v
+
       - name: Verify Control Plane Railway ops contract
         run: |
           python - <<'PY'
