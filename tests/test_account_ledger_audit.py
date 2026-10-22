@@ -408,6 +408,10 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
              "before": 11815.0, "amount": -100.0, "after": 11715.0,
              "reason": "staking:stake",
              "meta": {"staked_before": 136, "staked_after": 236}},
+            # Unrelated later zero-before row must not prove this consolidation cleared source.
+            {"time": "2026-08-24T09:00:00+00:00", "uid": source_uid,
+             "before": 0.0, "amount": 5.0, "after": 5.0,
+             "reason": "admin:test_grant"},
         ],
     }
     before = deepcopy(db)
