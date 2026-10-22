@@ -517,13 +517,21 @@ def register(bot, context=None):
                 processed = db.get("processed_transfers")
                 processed = processed if isinstance(processed, dict) else {}
                 processed_matches = sum(
-                    1 for value in processed.values()
-                    if str(value or "") in seen_transfer_ids
+                    1
+                    for value in processed.values()
+                    if (
+                        isinstance(value, dict)
+                        and str(value.get("transfer_id") or "") in seen_transfer_ids
+                    )
+                    or (
+                        isinstance(value, str)
+                        and value.strip() in seen_transfer_ids
+                    )
                 )
                 lines += [
                     "",
                     f"TRANSFER CONTEXT: matched_ledger_rows={transfer_rows} "
-                    f"processed_keys_matching={processed_matches}",
+                    f"processed_records_matching={processed_matches}",
                 ]
             lines += [
                 "",
