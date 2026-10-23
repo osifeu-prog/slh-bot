@@ -269,7 +269,13 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
         processed = db.get("processed_transfers")
         processed_keys = [
             str(key) for key, value in processed.items()
-            if str(value) == transfer_id
+            if (
+                (isinstance(value, str) and value.strip() == transfer_id)
+                or (
+                    isinstance(value, dict)
+                    and str(value.get("transfer_id") or "").strip() == transfer_id
+                )
+            )
         ][:5] if isinstance(processed, dict) else []
         evidence["transfer"] = {
             "transfer_id": transfer_id,
