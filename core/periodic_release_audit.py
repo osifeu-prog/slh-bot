@@ -55,7 +55,15 @@ def _valid_ledger_result(result: Any) -> bool:
         return False
     if result.get("financial_mutation_performed") is not False or result.get("gate_changed") is not False:
         return False
-    if not isinstance(result.get("findings"), list) or not isinstance(result.get("blockers"), list):
+    findings = result.get("findings")
+    blockers = result.get("blockers")
+    if not isinstance(findings, list) or not all(isinstance(item, dict) for item in findings):
+        return False
+    if not isinstance(blockers, list) or not all(isinstance(item, str) for item in blockers):
+        return False
+    if not isinstance(result.get("findings_truncated"), bool):
+        return False
+    if not isinstance(result.get("current_balance_matches_tail"), bool):
         return False
     for key in (
         "rows_checked",
@@ -64,11 +72,20 @@ def _valid_ledger_result(result: Any) -> bool:
         "unresolved_continuity_break_count",
         "arithmetic_error_count",
         "malformed_global_rows",
+        "finding_count",
         "blocking_finding_count",
     ):
         value = result.get(key)
         if isinstance(value, bool) or not isinstance(value, int) or value < 0:
             return False
+    if result["blocking_finding_count"] > result["finding_count"]:
+        return False
+    if len(findings) > result["finding_count"]:
+        return False
+    if result["status"] == "PASS" and (result["blocking_finding_count"] != 0 or blockers):
+        return False
+    if result["status"] == "BLOCKED" and not blockers:
+        return False
     return True
 
 
@@ -76,14 +93,33 @@ def _valid_release_result(result: Any) -> bool:
     if not isinstance(result, dict) or result.get("overall_status") not in _ALLOWED_STATUSES:
         return False
     checks = result.get("checks")
+    blockers = result.get("blockers")
     return (
         isinstance(checks, dict)
+        and isinstance(blockers, list)
+        and all(isinstance(item, str) for item in blockers)
         and all(
             isinstance(item, dict)
             and item.get("status") in _ALLOWED_STATUSES
             and isinstance(item.get("detail"), str)
             for item in checks.values()
         )
+        and (
+            result.get("overall_status") != "BLOCKED"
+            or bool(blockers)
+        )
+    )
+
+
+def _valid_exchange_result(result: Any) -> bool:
+    return (
+        isinstance(result, dict)
+        and result.get("public_gate") in {"CLOSED", "OPEN"}
+        and isinstance(result.get("verdict"), str)
+        and result.get("verdict") in {"BLOCKED", "READY_TO_OPEN", "OPEN"}
+        and isinstance(result.get("public_ready"), bool)
+        and result.get("account_ledger_status") in {"PASS", "BLOCKED"}
+        and isinstance(result.get("account_ledger_integrity"), bool)
     )
 
 
@@ -174,7 +210,7 @@ def run_once(*, now_utc: str | None = None) -> dict[str, Any]:
                 ]
                 blockers.extend(release_blockers or ["RELEASE_READINESS_BLOCKED"])
 
-        if not isinstance(exchange_raw, dict):
+        if not _valid_exchange_result(exchange_raw):
             blockers.append("EXCHANGE_AUDIT_RESULT_INVALID")
             evidence_integrity = "BLOCKED"
         else:
@@ -308,14 +344,54 @@ def render_report(report: Any) -> str:
 
 
 def _signature(report: dict[str, Any]) -> str:
+    ledger = report.get("ledger") if isinstance(report.get("ledger"), dict) else {}
+    exchange = report.get("exchange") if isinstance(report.get("exchange"), dict) else {}
+    release = report.get("release_readiness") if isinstance(report.get("release_readiness"), dict) else {}
+    source = report.get("source") if isinstance(report.get("source"), dict) else {}
+    raw_findings = ledger.get("findings") if isinstance(ledger.get("findings"), list) else []
+    findings = [
+        {
+            "type": item.get("type"),
+            "previous_index": item.get("previous_index"),
+            "next_index": item.get("next_index"),
+            "resolves_gap": item.get("resolves_gap"),
+            "source_match_status": item.get("source_match_status"),
+        }
+        for item in raw_findings
+        if isinstance(item, dict)
+    ]
+    blocker_keys = []
+    for value in report.get("blockers", []) if isinstance(report.get("blockers"), list) else []:
+        rendered = _safe_text(value, 180)
+        blocker_keys.append(rendered.split(":", 1)[0].strip())
+    checks = release.get("checks") if isinstance(release.get("checks"), dict) else {}
     payload = {
         "status": report.get("status"),
         "evidence_integrity": report.get("evidence_integrity"),
-        "ledger": report.get("ledger"),
-        "exchange": report.get("exchange"),
-        "release": report.get("release_readiness"),
-        "blockers": report.get("blockers"),
-        "source": report.get("source"),
+        "source": {
+            "commit_sha": source.get("commit_sha"),
+            "deployment_id": source.get("deployment_id"),
+        },
+        "ledger": {
+            "status": ledger.get("status"),
+            "unresolved_continuity_break_count": ledger.get("unresolved_continuity_break_count"),
+            "arithmetic_error_count": ledger.get("arithmetic_error_count"),
+            "malformed_global_rows": ledger.get("malformed_global_rows"),
+            "current_balance_matches_tail": ledger.get("current_balance_matches_tail"),
+            "findings": findings,
+        },
+        "exchange": {
+            "verdict": exchange.get("verdict"),
+            "public_gate": exchange.get("public_gate"),
+            "public_ready": exchange.get("public_ready"),
+            "account_ledger_status": exchange.get("account_ledger_status"),
+            "account_ledger_integrity": exchange.get("account_ledger_integrity"),
+        },
+        "release": {
+            "status": release.get("status"),
+            "checks": {str(name): item.get("status") for name, item in checks.items() if isinstance(item, dict)},
+        },
+        "blockers": sorted(set(blocker_keys)),
     }
     raw = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
