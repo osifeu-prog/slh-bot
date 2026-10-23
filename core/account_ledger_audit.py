@@ -431,6 +431,21 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 "record_found": True,
                 "resolves_gap": bool(exact_source_event),
                 "verification_checks": verification_checks,
+                # Expose only boolean clearance diagnostics, not another account's
+                # wallet balances or private profile fields. This tells an owner
+                # exactly which archival prerequisite is missing without treating
+                # heuristic context as accounting proof.
+                "source_clearance_evidence": {
+                    "active_source_user_present": isinstance(source_user, dict),
+                    "archive_record_found": isinstance(archived_user, dict),
+                    "archive_wallet_found": isinstance(archived_wallet, dict),
+                    "archived_credits_explicit_zero": (
+                        archived_credits is not None and abs(archived_credits) <= EPSILON
+                    ),
+                    "archived_staked_explicit_zero": (
+                        archived_staked is not None and abs(archived_staked) <= EPSILON
+                    ),
+                },
                 "verification_failures": [
                     name for name, passed in verification_checks.items() if passed is not True
                 ],
