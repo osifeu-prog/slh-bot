@@ -136,6 +136,7 @@ def _payments_check():
 
 
 def _external_gate_check(db=None):
+    use_snapshot = db is not None
     blockers = []
     degraded = []
     notes = []
@@ -145,7 +146,7 @@ def _external_gate_check(db=None):
         try:
             from core.ton_deposit_service import ton_readiness
 
-            ton = ton_readiness()
+            ton = ton_readiness(db) if use_snapshot else ton_readiness()
             if not bool(ton.get("effective_open")):
                 blockers.append("TON_DEPOSITS_OPEN=1 but TON readiness is not effective")
             else:
@@ -161,8 +162,8 @@ def _external_gate_check(db=None):
             db = state_manager.load_db()
         bnb = bnb_readiness(db)
         flag_open = bool(bnb.get("flag_open"))
-        public_open = bool(bnb_deposits_open())
-        evidence = bnb_opening_evidence()
+        public_open = bool(bnb_deposits_open(db) if use_snapshot else bnb_deposits_open())
+        evidence = bnb_opening_evidence(db) if use_snapshot else bnb_opening_evidence()
         evidence_ready = bool(evidence.get("ready_to_open"))
 
         if flag_open and not public_open:
