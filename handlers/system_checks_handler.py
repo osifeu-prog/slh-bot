@@ -335,6 +335,27 @@ def register(bot, context=None):
                 parse_mode=None,
             )
 
+    @bot.message_handler(commands=["release_audit", "auto_release_audit"])
+    def release_audit_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — automated release audit.", parse_mode=None)
+            return
+        chat = getattr(message, "chat", None)
+        if chat is None or getattr(chat, "type", None) != "private":
+            bot.reply_to(message, "⛔ להריץ את הדוח המאוחד רק בשיחה פרטית עם הבוט.", parse_mode=None)
+            return
+        try:
+            from core.periodic_release_audit import run_once, render_report
+
+            bot.reply_to(message, render_report(run_once()), parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"⛔ Automated release audit BLOCKED — {type(exc).__name__}; no changes were made.",
+                parse_mode=None,
+            )
+
     @bot.message_handler(commands=["check", "checks"])
     def check_cmd(message):
         if not _allowed(message):

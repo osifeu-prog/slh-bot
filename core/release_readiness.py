@@ -48,12 +48,12 @@ def _miniapp_auth_check():
         return _check("Mini App auth", "BLOCKED", f"validator unavailable: {type(exc).__name__}")
 
 
-def _exchange_check():
+def _exchange_check(db=None):
     """Use the same canonical Exchange read-model as /check_exchange."""
     try:
         from core.system_checks import check_exchange
 
-        data = check_exchange()
+        data = check_exchange(db) if db is not None else check_exchange()
 
         verdict = str(data.get("verdict") or "BLOCKED")
         public_gate = str(data.get("public_gate") or "CLOSED")
@@ -124,18 +124,19 @@ def _exchange_check():
         )
 
 
-def _payments_check():
+def _payments_check(db=None):
     try:
         from core.revenue_ledger import summary
 
-        data = summary()
+        data = summary(db) if db is not None else summary()
         events = int(data.get("events", 0))
         return _check("Stars revenue", "GREEN", f"canonical revenue ledger readable ({events} events)")
     except Exception as exc:
         return _check("Stars revenue", "BLOCKED", f"revenue ledger check failed: {type(exc).__name__}")
 
 
-def _external_gate_check():
+def _external_gate_check(db=None):
+    use_snapshot = db is not None
     blockers = []
     degraded = []
     notes = []
@@ -145,7 +146,7 @@ def _external_gate_check():
         try:
             from core.ton_deposit_service import ton_readiness
 
-            ton = ton_readiness()
+            ton = ton_readiness(db) if use_snapshot else ton_readiness()
             if not bool(ton.get("effective_open")):
                 blockers.append("TON_DEPOSITS_OPEN=1 but TON readiness is not effective")
             else:
@@ -157,11 +158,12 @@ def _external_gate_check():
         from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_readiness
         import state_manager
 
-        db = state_manager.load_db()
+        if db is None:
+            db = state_manager.load_db()
         bnb = bnb_readiness(db)
         flag_open = bool(bnb.get("flag_open"))
-        public_open = bool(bnb_deposits_open())
-        evidence = bnb_opening_evidence()
+        public_open = bool(bnb_deposits_open(db) if use_snapshot else bnb_deposits_open())
+        evidence = bnb_opening_evidence(db) if use_snapshot else bnb_opening_evidence()
         evidence_ready = bool(evidence.get("ready_to_open"))
 
         if flag_open and not public_open:
@@ -209,14 +211,14 @@ def _participation_check():
         return _check("Participation", "BLOCKED", f"policy check failed: {type(exc).__name__}")
 
 
-def build_release_report():
+def build_release_report(db=None):
     raw = [
         _telegram_check(),
         _ai_check(),
         _miniapp_auth_check(),
-        _exchange_check(),
-        _payments_check(),
-        _external_gate_check(),
+        _exchange_check(db) if db is not None else _exchange_check(),
+        _payments_check(db) if db is not None else _payments_check(),
+        _external_gate_check(db) if db is not None else _external_gate_check(),
         _participation_check(),
     ]
     checks = {row["name"]: row for row in raw}

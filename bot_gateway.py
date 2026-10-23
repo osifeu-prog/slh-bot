@@ -342,6 +342,31 @@ def log_runtime_command_evidence(bot_name, bot):
         )
 
 
+def start_periodic_release_audit(bot):
+    """Start the canonical release/owner-ledger audit after the primary bot exists."""
+    enabled = os.getenv("SLH_RELEASE_AUDIT_ENABLED", "1").strip().lower()
+    if enabled in {"0", "false", "no", "off"}:
+        log("[SLH_RELEASE_AUDIT] periodic audit disabled by configuration")
+        return False
+
+    def _run():
+        try:
+            from core.periodic_release_audit import run_periodic
+
+            run_periodic(bot, log)
+        except Exception as exc:
+            log(f"[SLH_RELEASE_AUDIT] startup failed: {type(exc).__name__}")
+
+    thread = threading.Thread(
+        target=_run,
+        daemon=True,
+        name="slh-periodic-release-audit",
+    )
+    thread.start()
+    log("[SLH_RELEASE_AUDIT] read-only periodic audit thread started")
+    return True
+
+
 def token_in_use(token, started_tokens):
     token = str(token or "").strip()
     if not token:
@@ -466,6 +491,10 @@ if __name__ == "__main__":
                     log("[OK] Bot Me_ad_main started")
                     threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                     started_bots["Me_ad_main"] = bot
+                    try:
+                        start_periodic_release_audit(bot)
+                    except Exception as exc:
+                        log(f"[SLH_RELEASE_AUDIT] startup failed safely: {type(exc).__name__}")
                     started_tokens.append(candidate_token)
                     break
                 except telebot.apihelper.ApiTelegramException as exc:

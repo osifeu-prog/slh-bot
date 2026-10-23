@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from core.release_readiness import build_release_report
 
 
@@ -242,3 +244,68 @@ def test_public_exchange_gate_open_is_blocked_even_when_checks_pass(monkeypatch)
     assert result["status"] == "BLOCKED"
     assert "policy requires public gate=CLOSED" in result["detail"]
     assert "public trading is not authorized" in result["detail"]
+
+
+def test_external_gate_check_reuses_caller_snapshot_for_ton_and_bnb(monkeypatch):
+    import core.bnb_gate as bnb_gate
+    import core.ton_deposit_service as ton_service
+    import core.release_readiness as readiness
+
+    monkeypatch.setenv("TON_DEPOSITS_OPEN", "1")
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
+    db = {
+        "users": {},
+        "ledger": [],
+        "transactions": {},
+        "ton_settings": {"wallet": "EQ-test", "credits_per_ton": 100},
+        "bsc_settings": {"bnb_deposits_override": "auto"},
+    }
+    observed = []
+
+    def ton_readiness(snapshot=None):
+        observed.append(("ton", snapshot))
+        return {"effective_open": True}
+
+    def bnb_readiness(snapshot=None):
+        observed.append(("bnb_readiness", snapshot))
+        return {"flag_open": False, "effective_open": False, "ready": False}
+
+    def bnb_deposits_open(snapshot=None):
+        observed.append(("bnb_deposits_open", snapshot))
+        return False
+
+    def bnb_opening_evidence(snapshot=None):
+        observed.append(("bnb_opening_evidence", snapshot))
+        return {"ready_to_open": False}
+
+    monkeypatch.setattr(ton_service, "ton_readiness", ton_readiness)
+    monkeypatch.setattr(bnb_gate, "bnb_readiness", bnb_readiness)
+    monkeypatch.setattr(bnb_gate, "bnb_deposits_open", bnb_deposits_open)
+    monkeypatch.setattr(bnb_gate, "bnb_opening_evidence", bnb_opening_evidence)
+
+    with patch("state_manager.load_db", side_effect=AssertionError("unexpected DB reload")):
+        result = readiness._external_gate_check(db)
+
+    assert result["status"] == "DEGRADED"
+    assert {name for name, _snapshot in observed} == {
+        "ton", "bnb_readiness", "bnb_deposits_open", "bnb_opening_evidence"
+    }
+    assert all(snapshot is db for _name, snapshot in observed)
+
+
+def test_payments_check_reuses_caller_snapshot(monkeypatch):
+    import core.release_readiness as readiness
+    import core.revenue_ledger as revenue_ledger
+
+    db = {"stars_revenue_ledger": []}
+    observed = []
+
+    def summary(snapshot=None):
+        observed.append(snapshot)
+        return {"events": 0, "totals": {}}
+
+    monkeypatch.setattr(revenue_ledger, "summary", summary)
+    result = readiness._payments_check(db)
+
+    assert result["status"] == "GREEN"
+    assert observed == [db]

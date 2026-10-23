@@ -36,8 +36,10 @@ def _canary_settlement_open() -> bool:
     return os.getenv("TON_DEPOSITS_CANARY_SETTLEMENT_OPEN", "0").strip() == "1"
 
 
-def _settings():
-    settings = state_manager.load_db().get("ton_settings", {}) or {}
+def _settings(db=None):
+    settings_db = state_manager.load_db() if db is None else db
+    settings_db = settings_db if isinstance(settings_db, dict) else {}
+    settings = settings_db.get("ton_settings", {}) or {}
     wallet = os.getenv("TON_WALLET", "").strip() or settings.get("wallet")
     rate = os.getenv("TON_CREDITS_PER_TON", "").strip() or settings.get("credits_per_ton")
     if rate in (None, "", 0):
@@ -46,7 +48,7 @@ def _settings():
 
 
 
-def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
+def _verified_public_replay_evidence(treasury: str, rate: Decimal, db=None) -> bool:
     """Fail closed unless the configured canary has a coherent credited-TX/replay proof.
 
     Replay evidence is keyed by UID, so this validates its current TX hash against
@@ -59,7 +61,7 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
         if not uid:
             return False
 
-        db = state_manager.load_db()
+        db = state_manager.load_db() if db is None else db
         if not isinstance(db, dict):
             return False
 
@@ -162,13 +164,13 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
     except Exception:
         return False
 
-def ton_readiness() -> dict:
+def ton_readiness(db=None) -> dict:
     """Read-only TON settlement readiness contract.
 
     This does not open deposits. It validates configuration and the safe rate
     band required before the operator can enable the normal gate.
     """
-    treasury, rate = _settings()
+    treasury, rate = _settings(db) if db is not None else _settings()
     reasons = []
     normalized = None
     if not treasury:
@@ -184,6 +186,8 @@ def ton_readiness() -> dict:
 
     config_ready = not reasons
     evidence_ready = (
+        _verified_public_replay_evidence(str(treasury), rate, db=db)
+        if config_ready and db is not None else
         _verified_public_replay_evidence(str(treasury), rate)
         if config_ready else False
     )

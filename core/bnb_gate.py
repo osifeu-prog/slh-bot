@@ -453,7 +453,7 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
     }
 
 
-def bnb_opening_evidence() -> dict:
+def bnb_opening_evidence(db=None) -> dict:
     """Read-only evidence for whether BNB could safely be opened.
 
     This function never changes the operator gate. It combines static gate
@@ -461,14 +461,20 @@ def bnb_opening_evidence() -> dict:
     remaining empirical settlement proof as pending until a controlled,
     authorized reconciliation has been completed.
     """
-    try:
-        current_db = state_manager.load_db()
+    if db is None:
+        try:
+            current_db = state_manager.load_db()
+            db_readable = isinstance(current_db, dict)
+            if not db_readable:
+                current_db = {}
+        except Exception:
+            current_db = {}
+            db_readable = False
+    else:
+        current_db = db
         db_readable = isinstance(current_db, dict)
         if not db_readable:
             current_db = {}
-    except Exception:
-        current_db = {}
-        db_readable = False
     gate = bnb_readiness(current_db)
     if not db_readable and "BNB_WALLET_BINDINGS_UNVERIFIED" not in gate.get("reasons", []):
         gate.setdefault("reasons", []).append("BNB_WALLET_BINDINGS_UNVERIFIED")
@@ -685,17 +691,18 @@ def bnb_opening_evidence() -> dict:
     return evidence
 
 
-def bnb_deposits_open() -> bool:
+def bnb_deposits_open(db=None) -> bool:
     """Public BNB deposits — fail-closed, close-only operator override.
 
     The DB override may close the gate, never open it. Opening requires a
     readable canonical DB, a valid settings mapping, the normal env/readiness
     gate, and a live revalidation of empirical chain + ledger proof.
     """
-    try:
-        db = state_manager.load_db()
-    except Exception:
-        return False
+    if db is None:
+        try:
+            db = state_manager.load_db()
+        except Exception:
+            return False
 
     if not isinstance(db, dict):
         return False

@@ -161,3 +161,21 @@ class TonDepositSettlementTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_ton_readiness_reuses_supplied_db_snapshot(monkeypatch):
+    import state_manager
+
+    monkeypatch.setenv("TON_WALLET", "")
+    monkeypatch.setenv("TON_CREDITS_PER_TON", "")
+    db = {"ton_settings": {}}
+
+    def unexpected_reload():
+        raise AssertionError("ton_readiness reloaded the DB instead of using its snapshot")
+
+    monkeypatch.setattr(state_manager, "load_db", unexpected_reload)
+    result = ton_deposit_service.ton_readiness(db)
+
+    assert result["config_ready"] is False
+    assert "TON_TREASURY_MISSING" in result["reasons"]
+    assert "TON_RATE_NOT_SAFE" in result["reasons"]
