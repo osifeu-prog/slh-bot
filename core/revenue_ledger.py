@@ -158,8 +158,11 @@ def record(*, source, amount, currency, reference, uid=None, meta=None):
     )
 
 
-def summary():
-    db = state_manager.load_db()
+def summary(db=None):
+    """Summarize revenue from a supplied canonical DB snapshot or load one."""
+    db = state_manager.load_db() if db is None else db
+    if not isinstance(db, dict):
+        raise ValueError("REVENUE_DB_INVALID")
     rows = db.get(KEY, [])
     totals = {}
     for row in rows if isinstance(rows, list) else []:
