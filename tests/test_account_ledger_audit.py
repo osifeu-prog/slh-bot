@@ -293,15 +293,14 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
 
-def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits_gap():
+def test_alpha_mixed_asset_delta_stays_blocked_even_when_combined_total_matches():
     target_uid = "8789977826"
     source_uid = "8791275334"
     db = {
         "users": {
             target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
         },
-        # The version-controlled historical transition archived this account
-        # with both asset balances at zero after the one-time consolidation.
+        # Historical archive context is not enough to combine distinct assets.
         "users_archive": {
             source_uid: {"wallet": {"credits": 0.0, "staked": 0.0}},
         },
@@ -325,25 +324,27 @@ def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits
 
     result = audit_account_ledger(db, target_uid)
 
-    assert result["status"] == "PASS"
-    assert result["continuity_break_count"] == 0
+    # The observed Credits sequence delta is 10,499, but only 10,449 Credits
+    # were migrated. The additional 50 Staked must not close a Credits gap.
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
     assert result["observed_discontinuity_count"] == 1
-    assert result["resolved_gap_count"] == 1
-    assert result["blocking_finding_count"] == 0
+    assert result["resolved_gap_count"] == 0
+    assert result["blocking_finding_count"] == 1
     assert result["current_balance_matches_tail"] is True
     finding = result["findings"][0]
-    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
-    assert finding["reconciled"] is True
+    assert finding["reconciled"] is False
     evidence = finding["source_evidence"]
-    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
-    assert evidence["resolves_gap"] is True
+    assert evidence["source_match_status"] == "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+    assert evidence["resolves_gap"] is False
     consolidation = evidence["alpha_consolidations"][0]
     assert consolidation["credits_component"] == 10449
     assert consolidation["staked_moved_component"] == 50
     assert consolidation["observed_balance_delta"] == 10499
+    assert consolidation["credits_component_matches_delta"] is False
     assert consolidation["credits_plus_staked_matches_delta"] is True
-    assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
-    assert consolidation["verification_failures"] == []
+    assert consolidation["verification_failures"] == ["credits_delta_matches"]
+    assert consolidation["source_commit"] is None
     assert db == before
 
 
@@ -389,13 +390,14 @@ def test_unverified_zero_before_admin_test_grant_does_not_resolve_balance_reset(
     assert db == before
 
 
-def test_alpha_consolidation_reports_source_wallet_clearance_failure():
+def test_alpha_consolidation_reports_current_wallet_is_not_historical_clearance_evidence():
     target_uid = "8789977826"
     source_uid = "8791275334"
     db = {
         "users": {
             target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
-            source_uid: {"wallet": {"credits": 10449.0, "staked": 50.0}},
+            # Even a current zero wallet is not proof of historical clearance.
+            source_uid: {"wallet": {"credits": 0.0, "staked": 0.0}},
         },
         "ledger": [
             {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
@@ -421,7 +423,7 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     evidence = result["findings"][0]["source_evidence"]
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == ["credits_delta_matches", "source_account_cleared"]
     assert db == before
 
 
@@ -455,7 +457,7 @@ def test_missing_source_account_without_zeroed_archive_does_not_resolve_alpha_ga
     assert result["resolved_gap_count"] == 0
     consolidation = result["findings"][0]["source_evidence"]["alpha_consolidations"][0]
     assert consolidation["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == ["credits_delta_matches", "source_account_cleared"]
 
 
 def test_unrelated_later_zero_before_does_not_prove_alpha_cleared_source():
@@ -497,7 +499,7 @@ def test_unrelated_later_zero_before_does_not_prove_alpha_cleared_source():
     assert result["resolved_gap_count"] == 0
     consolidation = result["findings"][0]["source_evidence"]["alpha_consolidations"][0]
     assert consolidation["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == ["credits_delta_matches", "source_account_cleared"]
 
 
 def test_unverified_alpha_consolidation_near_miss_stays_blocked():
