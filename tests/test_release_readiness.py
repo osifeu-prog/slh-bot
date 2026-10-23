@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from core.release_readiness import build_release_report
 
 
