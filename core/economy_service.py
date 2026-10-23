@@ -49,33 +49,73 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                 if existing_meta.get("idempotency_key") != idempotency_key:
                     continue
 
-                if not return_details:
-                    return entry["after"]
+                try:
+                    amount_matches = float(entry.get("amount", 0) or 0) == float(amount)
+                except (TypeError, ValueError, OverflowError):
+                    amount_matches = False
 
                 conflict = (
                     str(entry.get("uid")) != uid
                     or str(entry.get("reason")) != str(reason)
-                    or float(entry.get("amount", 0) or 0) != float(amount)
+                    or not amount_matches
                 )
-                for field in ("tx_hash", "bnb_amount_wei", "from", "to"):
-                    if field not in meta:
+                # A replay must describe the same immutable payment/purchase
+                # identity, not merely reuse a key with the same amount.
+                immutable_fields = (
+                    "tx_hash",
+                    "bnb_amount_wei",
+                    "from",
+                    "to",
+                    "purchase_id",
+                    "item_id",
+                    "event_id",
+                    "payment_id",
+                    "charge_id",
+                    "telegram_payment_charge_id",
+                    "provider_payment_charge_id",
+                    "currency",
+                    "stars_paid",
+                    "credits",
+                    "source_uid",
+                    "recipient_uid",
+                    "from_uid",
+                    "to_uid",
+                    "network",
+                    "chain_id",
+                    "token_contract",
+                    "token_address",
+                )
+                for field in immutable_fields:
+                    present_now = field in meta
+                    present_before = field in existing_meta
+                    if not present_now and not present_before:
                         continue
-                    if field not in existing_meta:
+                    if present_now != present_before:
                         conflict = True
                         break
                     old_value, new_value = existing_meta.get(field), meta.get(field)
-                    if field in {"tx_hash", "from", "to"}:
+                    if field in {"tx_hash", "from", "to", "token_contract", "token_address"}:
                         matches = str(old_value or "").lower() == str(new_value or "").lower()
-                    else:
+                    elif field == "bnb_amount_wei":
                         try:
                             matches = int(old_value) == int(new_value)
-                        except (TypeError, ValueError):
+                        except (TypeError, ValueError, OverflowError):
                             matches = False
+                    else:
+                        matches = str(old_value) == str(new_value)
                     if not matches:
                         conflict = True
                         break
 
                 wallet = users.get(uid, {}).get("wallet", {})
+                if conflict and not return_details:
+                    # Legacy spend callers only accept literal False as a
+                    # failed debit; never turn an idempotency conflict into a
+                    # numeric "success" balance that could trigger fulfilment.
+                    return False
+                if not return_details and not conflict:
+                    # Preserve the legacy return contract for an exact replay.
+                    return entry["after"]
                 return {
                     "status": "CONFLICT" if conflict else "DUPLICATE",
                     "balance_after": wallet.get("credits"),
