@@ -184,8 +184,11 @@ def test_notification_is_sent_once_per_changed_blocker_signature():
     }
 
     signature, status = target._deliver_if_changed(report, bot, logs.append)
+    same_blocker_later = deepcopy(report)
+    same_blocker_later["checked_at_utc"] = "2026-10-24T00:15:00+00:00"
+    same_blocker_later["ledger"]["rows_checked"] = 250
     signature_again, status_again = target._deliver_if_changed(
-        report, bot, logs.append, signature, status
+        same_blocker_later, bot, logs.append, signature, status
     )
 
     assert len(bot.messages) == 1
