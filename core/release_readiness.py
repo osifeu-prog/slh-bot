@@ -124,11 +124,11 @@ def _exchange_check(db=None):
         )
 
 
-def _payments_check():
+def _payments_check(db=None):
     try:
         from core.revenue_ledger import summary
 
-        data = summary()
+        data = summary(db) if db is not None else summary()
         events = int(data.get("events", 0))
         return _check("Stars revenue", "GREEN", f"canonical revenue ledger readable ({events} events)")
     except Exception as exc:
@@ -217,7 +217,7 @@ def build_release_report(db=None):
         _ai_check(),
         _miniapp_auth_check(),
         _exchange_check(db) if db is not None else _exchange_check(),
-        _payments_check(),
+        _payments_check(db) if db is not None else _payments_check(),
         _external_gate_check(db) if db is not None else _external_gate_check(),
         _participation_check(),
     ]
