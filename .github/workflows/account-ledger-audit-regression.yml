@@ -1,0 +1,32 @@
+name: Read-only Account Ledger Audit Regression
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: account-ledger-audit-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run read-only account-ledger audit regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest -v tests.test_account_ledger_audit
