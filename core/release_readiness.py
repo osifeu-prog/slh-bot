@@ -48,12 +48,12 @@ def _miniapp_auth_check():
         return _check("Mini App auth", "BLOCKED", f"validator unavailable: {type(exc).__name__}")
 
 
-def _exchange_check():
+def _exchange_check(db=None):
     """Use the same canonical Exchange read-model as /check_exchange."""
     try:
         from core.system_checks import check_exchange
 
-        data = check_exchange()
+        data = check_exchange(db) if db is not None else check_exchange()
 
         verdict = str(data.get("verdict") or "BLOCKED")
         public_gate = str(data.get("public_gate") or "CLOSED")
@@ -135,7 +135,7 @@ def _payments_check():
         return _check("Stars revenue", "BLOCKED", f"revenue ledger check failed: {type(exc).__name__}")
 
 
-def _external_gate_check():
+def _external_gate_check(db=None):
     blockers = []
     degraded = []
     notes = []
@@ -157,7 +157,8 @@ def _external_gate_check():
         from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_readiness
         import state_manager
 
-        db = state_manager.load_db()
+        if db is None:
+            db = state_manager.load_db()
         bnb = bnb_readiness(db)
         flag_open = bool(bnb.get("flag_open"))
         public_open = bool(bnb_deposits_open())
@@ -209,14 +210,14 @@ def _participation_check():
         return _check("Participation", "BLOCKED", f"policy check failed: {type(exc).__name__}")
 
 
-def build_release_report():
+def build_release_report(db=None):
     raw = [
         _telegram_check(),
         _ai_check(),
         _miniapp_auth_check(),
-        _exchange_check(),
+        _exchange_check(db),
         _payments_check(),
-        _external_gate_check(),
+        _external_gate_check(db),
         _participation_check(),
     ]
     checks = {row["name"]: row for row in raw}
