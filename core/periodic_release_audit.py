@@ -300,6 +300,8 @@ def run_once(*, now_utc: str | None = None) -> dict[str, Any]:
             "rows_checked": ledger.get("rows_checked", 0),
             "credits_sequence_rows_checked": ledger.get("credits_sequence_rows_checked", 0),
             "continuity_break_count": ledger.get("continuity_break_count", 0),
+            "observed_discontinuity_count": ledger.get("observed_discontinuity_count", 0),
+            "resolved_gap_count": ledger.get("resolved_gap_count", 0),
             "unresolved_continuity_break_count": ledger.get("unresolved_continuity_break_count", 0),
             "arithmetic_error_count": ledger.get("arithmetic_error_count", 0),
             "malformed_global_rows": ledger.get("malformed_global_rows", 0),
@@ -356,7 +358,7 @@ def render_report(report: Any) -> str:
         f"Deployment: {_safe_text(source.get('deployment_id'), 120)}",
         f"Canonical DB source: {_safe_text(source.get('database_source'), 40)} · {_safe_text(source.get('database_path'), 120)}",
         "",
-        f"Owner Credits ledger: {_safe_text(ledger.get('status'), 20)} · unresolved gaps={ledger.get('unresolved_continuity_break_count', 'UNKNOWN')} · arithmetic errors={ledger.get('arithmetic_error_count', 'UNKNOWN')}",
+        f"Owner Credits ledger: {_safe_text(ledger.get('status'), 20)} · rows={ledger.get('rows_checked', 'UNKNOWN')} (Credits sequence={ledger.get('credits_sequence_rows_checked', 'UNKNOWN')}) · observed gaps={ledger.get('observed_discontinuity_count', 'UNKNOWN')} · source-resolved={ledger.get('resolved_gap_count', 'UNKNOWN')} · unresolved gaps={ledger.get('unresolved_continuity_break_count', 'UNKNOWN')} · arithmetic errors={ledger.get('arithmetic_error_count', 'UNKNOWN')}",
         f"Exchange: verdict={_safe_text(exchange.get('verdict'), 30)} · public gate={_safe_text(exchange.get('public_gate'), 20)} · ledger={_safe_text(exchange.get('account_ledger_status'), 20)}",
         f"Release readiness: {_safe_text(release.get('status'), 20)}",
     ]
@@ -367,7 +369,9 @@ def render_report(report: Any) -> str:
         lines.append(
             "Finding: "
             f"{_safe_text(finding.get('type'), 70)} · "
-            f"rows #{_safe_text(finding.get('previous_index'), 12)} → #{_safe_text(finding.get('next_index'), 12)} · "
+            f"#{_safe_text(finding.get('previous_index'), 12)} {_safe_text(finding.get('previous_reason'), 48)} → "
+            f"#{_safe_text(finding.get('next_index'), 12)} {_safe_text(finding.get('next_reason'), 48)} · "
+            f"delta={_safe_text(finding.get('delta_to_explain'), 32)} Credits · "
             f"{_safe_text(finding.get('source_match_status'), 75)} · "
             f"resolves_gap={finding.get('resolves_gap') is True}"
         )
