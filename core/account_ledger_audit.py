@@ -336,32 +336,33 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             users_db = db.get("users")
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
-            
-            # FIX: Check if source was 0 immediately after alpha (Row 53 before=0 proves it)
-            # Source got 20 credits in Row 53 with before=0, so it was 0 after Row 2, now has 5 after spending 15
-            source_was_zero_after_alpha = False
-            try:
-                for r in db.get("ledger", []):
-                    if not isinstance(r, dict):
-                        continue
-                    if str(r.get("uid") or "") == source_uid:
-                        b = _number(r.get("before"))
-                        if b is not None and abs(b) <= EPSILON:
-                            source_was_zero_after_alpha = True
-                            break
-            except Exception:
-                source_was_zero_after_alpha = False
 
-            if isinstance(source_user, dict):
-                source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
-                source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
-                source_account_cleared = (
-                    (source_credits is not None and source_staked is not None
-                     and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON)
-                    or source_was_zero_after_alpha
-                )
-            else:
-                source_account_cleared = True
+            # Fail closed: current source state must be present and explicitly zero.
+            # An unrelated historical row with before=0 is not proof that this
+            # consolidation cleared the source account; a missing account is
+            # also insufficient evidence to resolve the destination's ledger gap.
+            source_credits = (
+                _number(source_wallet.get("credits"))
+                if isinstance(source_wallet, dict) else None
+            )
+            source_staked = (
+                _number(source_wallet.get("staked"))
+                if isinstance(source_wallet, dict) else None
+            )
+            # A zero current wallet is not historical proof that this Alpha
+            # event cleared the source account. Until the ledger has a source-side
+            # clearance record causally linked to this exact event, do not use this
+            # event to resolve a destination discontinuity.
+            source_wallet_is_zero_now = (
+                source_credits is not None
+                and source_staked is not None
+                and abs(source_credits) <= EPSILON
+                and abs(source_staked) <= EPSILON
+            )
+            source_clearance_event_verified = False
+            source_account_cleared = (
+                source_wallet_is_zero_now and source_clearance_event_verified
+            )
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
