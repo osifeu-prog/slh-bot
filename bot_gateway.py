@@ -491,7 +491,10 @@ if __name__ == "__main__":
                     log("[OK] Bot Me_ad_main started")
                     threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                     started_bots["Me_ad_main"] = bot
-                    start_periodic_release_audit(bot)
+                    try:
+                        start_periodic_release_audit(bot)
+                    except Exception as exc:
+                        log(f"[SLH_RELEASE_AUDIT] startup failed safely: {type(exc).__name__}")
                     started_tokens.append(candidate_token)
                     break
                 except telebot.apihelper.ApiTelegramException as exc:
