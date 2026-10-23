@@ -170,7 +170,7 @@ def ton_readiness(db=None) -> dict:
     This does not open deposits. It validates configuration and the safe rate
     band required before the operator can enable the normal gate.
     """
-    treasury, rate = _settings(db)
+    treasury, rate = _settings(db) if db is not None else _settings()
     reasons = []
     normalized = None
     if not treasury:
@@ -187,6 +187,8 @@ def ton_readiness(db=None) -> dict:
     config_ready = not reasons
     evidence_ready = (
         _verified_public_replay_evidence(str(treasury), rate, db=db)
+        if config_ready and db is not None else
+        _verified_public_replay_evidence(str(treasury), rate)
         if config_ready else False
     )
     all_reasons = list(reasons)
