@@ -385,10 +385,10 @@ def test_unverified_zero_before_admin_test_grant_does_not_resolve_balance_reset(
     assert db == before
 
 
-def test_alpha_consolidation_reports_source_wallet_clearance_failure():
+def test_alpha_consolidation_fails_closed_on_unrelated_zero_row_or_missing_source():
     target_uid = "8789977826"
     source_uid = "8791275334"
-    db = {
+    base_db = {
         "users": {
             target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
             source_uid: {"wallet": {"credits": 10449.0, "staked": 50.0}},
@@ -407,19 +407,26 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
              "before": 11815.0, "amount": -100.0, "after": 11715.0,
              "reason": "staking:stake",
              "meta": {"staked_before": 136, "staked_after": 236}},
+            # An unrelated later source row starts at zero; it does not prove
+            # that the Alpha consolidation cleared the source wallet.
+            {"time": "2026-09-01T00:00:00+00:00", "uid": source_uid,
+             "before": 0.0, "amount": 20.0, "after": 20.0,
+             "reason": "admin:test_grant"},
         ],
     }
-    before = deepcopy(db)
+    missing_source_db = deepcopy(base_db)
+    del missing_source_db["users"][source_uid]
 
-    result = audit_account_ledger(db, target_uid)
+    for db in (base_db, missing_source_db):
+        before = deepcopy(db)
+        result = audit_account_ledger(db, target_uid)
 
-    assert result["status"] == "BLOCKED"
-    evidence = result["findings"][0]["source_evidence"]
-    consolidation = evidence["alpha_consolidations"][0]
-    assert evidence["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
-    assert db == before
-
+        assert result["status"] == "BLOCKED"
+        evidence = result["findings"][0]["source_evidence"]
+        consolidation = evidence["alpha_consolidations"][0]
+        assert evidence["resolves_gap"] is False
+        assert consolidation["verification_failures"] == ["source_account_cleared"]
+        assert db == before
 
 def test_unverified_alpha_consolidation_near_miss_stays_blocked():
     target_uid = "8789977826"
