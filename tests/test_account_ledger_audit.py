@@ -293,12 +293,13 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
 
-def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits_gap():
+def test_historical_alpha_without_event_linked_source_clearance_stays_blocked():
     target_uid = "8789977826"
     source_uid = "8791275334"
     db = {
         "users": {
             target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+            # Current zero balance alone is not proof of historical clearance.
             source_uid: {"wallet": {"credits": 0.0, "staked": 0.0}},
         },
         "ledger": [
@@ -321,27 +322,17 @@ def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits
 
     result = audit_account_ledger(db, target_uid)
 
-    assert result["status"] == "PASS"
-    assert result["continuity_break_count"] == 0
-    assert result["observed_discontinuity_count"] == 1
-    assert result["resolved_gap_count"] == 1
-    assert result["blocking_finding_count"] == 0
-    assert result["current_balance_matches_tail"] is True
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    assert result["resolved_gap_count"] == 0
     finding = result["findings"][0]
-    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
-    assert finding["reconciled"] is True
+    assert finding["type"] == "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+    assert finding["reconciled"] is False
     evidence = finding["source_evidence"]
-    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
-    assert evidence["resolves_gap"] is True
+    assert evidence["resolves_gap"] is False
     consolidation = evidence["alpha_consolidations"][0]
-    assert consolidation["credits_component"] == 10449
-    assert consolidation["staked_moved_component"] == 50
-    assert consolidation["observed_balance_delta"] == 10499
-    assert consolidation["credits_plus_staked_matches_delta"] is True
-    assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
-    assert consolidation["verification_failures"] == []
+    assert consolidation["verification_failures"] == ["source_account_cleared"]
     assert db == before
-
 
 def test_unverified_zero_before_admin_test_grant_does_not_resolve_balance_reset():
     target_uid = UID
