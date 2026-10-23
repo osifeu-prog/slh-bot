@@ -80,13 +80,38 @@ def _valid_ledger_result(result: Any) -> bool:
             return False
     if result["blocking_finding_count"] > result["finding_count"]:
         return False
+    if result["blocking_finding_count"] != (
+        result["unresolved_continuity_break_count"]
+        + result["arithmetic_error_count"]
+        + result["malformed_global_rows"]
+    ):
+        return False
     if len(findings) > result["finding_count"]:
         return False
-    if result["status"] == "PASS" and (result["blocking_finding_count"] != 0 or blockers):
+    if result["status"] == "PASS" and (
+        result["blocking_finding_count"] != 0
+        or blockers
+        or result["unresolved_continuity_break_count"] != 0
+        or result["arithmetic_error_count"] != 0
+        or result["malformed_global_rows"] != 0
+        or result["findings_truncated"]
+        or not result["current_balance_matches_tail"]
+    ):
         return False
     if result["status"] == "BLOCKED" and not blockers:
         return False
     return True
+
+
+_REQUIRED_RELEASE_CHECKS = {
+    "Telegram runtime",
+    "AI intake",
+    "Mini App auth",
+    "Internal exchange",
+    "Stars revenue",
+    "External settlement gates",
+    "Participation",
+}
 
 
 def _valid_release_result(result: Any) -> bool:
@@ -94,33 +119,52 @@ def _valid_release_result(result: Any) -> bool:
         return False
     checks = result.get("checks")
     blockers = result.get("blockers")
-    return (
-        isinstance(checks, dict)
-        and isinstance(blockers, list)
-        and all(isinstance(item, str) for item in blockers)
-        and all(
-            isinstance(item, dict)
-            and item.get("status") in _ALLOWED_STATUSES
-            and isinstance(item.get("detail"), str)
-            for item in checks.values()
-        )
-        and (
-            result.get("overall_status") != "BLOCKED"
-            or bool(blockers)
-        )
-    )
+    if not isinstance(checks, dict) or set(checks) != _REQUIRED_RELEASE_CHECKS:
+        return False
+    if not isinstance(blockers, list) or not all(isinstance(item, str) for item in blockers):
+        return False
+    if not all(
+        isinstance(item, dict)
+        and item.get("status") in _ALLOWED_STATUSES
+        and isinstance(item.get("detail"), str)
+        for item in checks.values()
+    ):
+        return False
+    blocked = [row for row in checks.values() if row["status"] == "BLOCKED"]
+    degraded = [row for row in checks.values() if row["status"] == "DEGRADED"]
+    expected_status = "BLOCKED" if blocked else "DEGRADED" if degraded else "GREEN"
+    if result["overall_status"] != expected_status:
+        return False
+    if blocked and not blockers:
+        return False
+    if not blocked and blockers:
+        return False
+    return True
 
 
 def _valid_exchange_result(result: Any) -> bool:
-    return (
-        isinstance(result, dict)
-        and result.get("public_gate") in {"CLOSED", "OPEN"}
-        and isinstance(result.get("verdict"), str)
-        and result.get("verdict") in {"BLOCKED", "READY_TO_OPEN", "OPEN"}
-        and isinstance(result.get("public_ready"), bool)
-        and result.get("account_ledger_status") in {"PASS", "BLOCKED"}
-        and isinstance(result.get("account_ledger_integrity"), bool)
-    )
+    if not isinstance(result, dict):
+        return False
+    public_gate = result.get("public_gate")
+    verdict = result.get("verdict")
+    public_ready = result.get("public_ready")
+    ledger_status = result.get("account_ledger_status")
+    ledger_integrity = result.get("account_ledger_integrity")
+    if public_gate not in {"CLOSED", "OPEN"}:
+        return False
+    if verdict not in {"BLOCKED", "READY_TO_OPEN", "OPEN"}:
+        return False
+    if not isinstance(public_ready, bool) or ledger_status not in {"PASS", "BLOCKED"}:
+        return False
+    if not isinstance(ledger_integrity, bool) or (ledger_status == "PASS") != ledger_integrity:
+        return False
+    if verdict == "OPEN" and not (public_gate == "OPEN" and public_ready and ledger_integrity):
+        return False
+    if verdict == "READY_TO_OPEN" and not (public_gate == "CLOSED" and public_ready and ledger_integrity):
+        return False
+    if public_ready and not ledger_integrity:
+        return False
+    return True
 
 
 def _finding_summary(finding: Any) -> dict[str, Any]:
@@ -354,6 +398,7 @@ def _signature(report: dict[str, Any]) -> str:
             "type": item.get("type"),
             "previous_index": item.get("previous_index"),
             "next_index": item.get("next_index"),
+            "delta_to_explain": item.get("delta_to_explain"),
             "resolves_gap": item.get("resolves_gap"),
             "source_match_status": item.get("source_match_status"),
         }
@@ -389,7 +434,14 @@ def _signature(report: dict[str, Any]) -> str:
         },
         "release": {
             "status": release.get("status"),
-            "checks": {str(name): item.get("status") for name, item in checks.items() if isinstance(item, dict)},
+            "checks": {
+                str(name): {
+                    "status": item.get("status"),
+                    "detail": _safe_text(item.get("detail"), 180),
+                }
+                for name, item in checks.items()
+                if isinstance(item, dict)
+            },
         },
         "blockers": sorted(set(blocker_keys)),
     }
@@ -452,5 +504,23 @@ def run_periodic(bot, log, interval_seconds=None) -> None:
                 report, bot, log, last_signature, last_status
             )
         except Exception as exc:
+            failure_report = {
+                "status": "BLOCKED",
+                "evidence_integrity": "BLOCKED",
+                "checked_at_utc": _utc_now(),
+                "source": _identity(),
+                "ledger": {"status": "BLOCKED", "unresolved_continuity_break_count": "UNKNOWN",
+                           "arithmetic_error_count": "UNKNOWN", "findings": []},
+                "exchange": {"verdict": "BLOCKED", "public_gate": "UNKNOWN",
+                             "account_ledger_status": "UNKNOWN"},
+                "release_readiness": {"status": "BLOCKED", "checks": {}},
+                "blockers": [f"AUDIT_WORKER_EXCEPTION:{type(exc).__name__}"],
+                "evidence_refs": ["/release_audit", "/check_owner_ledger"],
+                "financial_mutation_performed": False,
+                "gate_changed": False,
+            }
             log(f"[SLH_RELEASE_AUDIT] status=BLOCKED error={type(exc).__name__}")
+            last_signature, last_status = _deliver_if_changed(
+                failure_report, bot, log, last_signature, last_status
+            )
         time.sleep(interval)
