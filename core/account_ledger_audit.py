@@ -349,11 +349,19 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 _number(source_wallet.get("staked"))
                 if isinstance(source_wallet, dict) else None
             )
-            source_account_cleared = (
+            # A zero current wallet is not historical proof that this Alpha
+            # event cleared the source account. Until the ledger has a source-side
+            # clearance record causally linked to this exact event, do not use this
+            # event to resolve a destination discontinuity.
+            source_wallet_is_zero_now = (
                 source_credits is not None
                 and source_staked is not None
                 and abs(source_credits) <= EPSILON
                 and abs(source_staked) <= EPSILON
+            )
+            source_clearance_event_verified = False
+            source_account_cleared = (
+                source_wallet_is_zero_now and source_clearance_event_verified
             )
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
