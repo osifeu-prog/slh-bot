@@ -289,3 +289,21 @@ def test_external_gate_check_reuses_caller_snapshot_for_ton_and_bnb(monkeypatch)
         "ton", "bnb_readiness", "bnb_deposits_open", "bnb_opening_evidence"
     }
     assert all(snapshot is db for _name, snapshot in observed)
+
+
+def test_payments_check_reuses_caller_snapshot(monkeypatch):
+    import core.release_readiness as readiness
+    import core.revenue_ledger as revenue_ledger
+
+    db = {"stars_revenue_ledger": []}
+    observed = []
+
+    def summary(snapshot=None):
+        observed.append(snapshot)
+        return {"events": 0, "totals": {}}
+
+    monkeypatch.setattr(revenue_ledger, "summary", summary)
+    result = readiness._payments_check(db)
+
+    assert result["status"] == "GREEN"
+    assert observed == [db]
