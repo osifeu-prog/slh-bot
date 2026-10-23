@@ -215,9 +215,9 @@ def build_release_report(db=None):
         _telegram_check(),
         _ai_check(),
         _miniapp_auth_check(),
-        _exchange_check(db),
+        _exchange_check(db) if db is not None else _exchange_check(),
         _payments_check(),
-        _external_gate_check(db),
+        _external_gate_check(db) if db is not None else _external_gate_check(),
         _participation_check(),
     ]
     checks = {row["name"]: row for row in raw}
