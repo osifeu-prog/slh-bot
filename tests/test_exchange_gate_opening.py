@@ -22,6 +22,8 @@ def _fresh_opening_proof(now=None):
         "order_book_integrity": True,
         "trade_integrity": True,
         "money_invariants": True,
+        "account_ledger_status": "PASS",
+        "account_ledger_integrity": True,
         "open_orders": 0,
         "test_seed_open": 0,
         "test_seed_trades": 0,
@@ -53,6 +55,8 @@ def test_fresh_canonical_opening_proof_is_accepted():
         {"order_book_integrity": False},
         {"trade_integrity": False},
         {"money_invariants": False},
+        {"account_ledger_status": "BLOCKED"},
+        {"account_ledger_integrity": False},
         {"open_orders": 1},
         {"test_seed_open": 1},
         {"test_seed_trades": 1},
@@ -63,6 +67,18 @@ def test_opening_proof_rejects_non_green_or_non_launch_clean_state(change):
     proof = _fresh_opening_proof()
     proof.update(change)
 
+    with pytest.raises(railway_control.RailwayControlError, match="EXCHANGE_OPENING_PROOF_INVALID"):
+        _validator()(proof)
+
+
+def test_opening_proof_requires_explicit_ledger_evidence():
+    proof = _fresh_opening_proof()
+    proof.pop("account_ledger_status")
+    with pytest.raises(railway_control.RailwayControlError, match="EXCHANGE_OPENING_PROOF_INVALID"):
+        _validator()(proof)
+
+    proof = _fresh_opening_proof()
+    proof.pop("account_ledger_integrity")
     with pytest.raises(railway_control.RailwayControlError, match="EXCHANGE_OPENING_PROOF_INVALID"):
         _validator()(proof)
 

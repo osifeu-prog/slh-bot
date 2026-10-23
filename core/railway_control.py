@@ -504,6 +504,8 @@ def validate_exchange_opening_proof(proof, *, now=None):
         or proof.get("order_book_integrity") is not True
         or proof.get("trade_integrity") is not True
         or proof.get("money_invariants") is not True
+        or proof.get("account_ledger_status") != "PASS"
+        or proof.get("account_ledger_integrity") is not True
     ):
         raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID")
 
@@ -521,6 +523,8 @@ def validate_exchange_opening_proof(proof, *, now=None):
         "order_book_integrity": True,
         "trade_integrity": True,
         "money_invariants": True,
+        "account_ledger_status": "PASS",
+        "account_ledger_integrity": True,
         "open_orders": 0,
         "test_seed_open": 0,
         "test_seed_trades": 0,
