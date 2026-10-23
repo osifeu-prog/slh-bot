@@ -1,6 +1,11 @@
 name: Read-only Account Ledger Audit Regression
 
 on:
+  pull_request:
+    paths:
+      - "core/account_ledger_audit.py"
+      - "tests/test_account_ledger_audit.py"
+      - ".github/workflows/account-ledger-audit-regression.yml"
   workflow_dispatch:
   schedule:
     - cron: "37 4 * * *"
