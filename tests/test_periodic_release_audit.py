@@ -230,6 +230,7 @@ def test_notification_is_sent_once_per_changed_blocker_signature():
         changed_gap, bot, logs.append, signature_again, status_again
     )
     assert len(bot.messages) == 2
+    assert "delta=5.0 Credits" in bot.messages[1]["text"]
     assert changed_signature != signature_again
     assert changed_status == "BLOCKED"
 
