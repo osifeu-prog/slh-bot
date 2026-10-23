@@ -337,28 +337,12 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
             
-            # Only source balance evidence after this exact consolidation can support
-            # clearance. Do not let an unrelated later zero balance retroactively
-            # prove that the consolidation cleared the source account.
-            source_was_zero_after_alpha = False
-            try:
-                for source_row_index in range(index + 1, len(ledger)):
-                    source_row = ledger[source_row_index]
-                    if not isinstance(source_row, dict):
-                        continue
-                    if str(source_row.get("uid") or "").strip() != source_uid:
-                        continue
-                    source_before = _number(source_row.get("before"))
-                    source_after = _number(source_row.get("after"))
-                    if source_before is None or source_after is None:
-                        continue
-                    # The first subsequent source balance movement is the only
-                    # ledger row used to infer the source's post-event state.
-                    source_was_zero_after_alpha = abs(source_before) <= EPSILON
-                    break
-            except Exception:
-                source_was_zero_after_alpha = False
-
+            # A current zero balance or a later source ledger row is not
+            # event-linked proof that this historical consolidation cleared the
+            # source. Require the source to be absent from active users and its
+            # archived Credits and Staked counters both to be explicitly zero.
+            # This clearance evidence is only one necessary check: Credits
+            # continuity must still match the Credits component independently.
             archived_users = db.get("users_archive")
             archived_user = (
                 archived_users.get(source_uid)
@@ -386,25 +370,9 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 and abs(archived_credits) <= EPSILON
                 and abs(archived_staked) <= EPSILON
             )
-
-            if isinstance(source_user, dict):
-                source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
-                source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
-                source_account_cleared = (
-                    (
-                        source_credits is not None
-                        and source_staked is not None
-                        and abs(source_credits) <= EPSILON
-                        and abs(source_staked) <= EPSILON
-                    )
-                    or source_was_zero_after_alpha
-                )
-            else:
-                # Historical source-account removal is accepted only when the
-                # archived wallet itself confirms both asset balances are zero.
-                source_account_cleared = (
-                    source_archived_cleared or source_was_zero_after_alpha
-                )
+            source_account_cleared = (
+                not isinstance(source_user, dict) and source_archived_cleared
+            )
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
@@ -430,9 +398,11 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     next_before is not None
                     and abs(next_before - verified["next_before"]) <= EPSILON
                 ),
-                "combined_delta_matches": (
+                # Credits continuity must be reconciled against Credits only.
+                # Staked is a separate asset and cannot explain any Credits delta.
+                "credits_delta_matches": (
                     observed_delta is not None
-                    and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                    and abs(observed_delta - verified["credits"]) <= EPSILON
                 ),
                 "source_account_cleared": source_account_cleared,
             }
