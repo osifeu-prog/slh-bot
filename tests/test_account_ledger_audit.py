@@ -299,6 +299,10 @@ def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits
     db = {
         "users": {
             target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+        },
+        # The version-controlled historical transition archived this account
+        # with both asset balances at zero after the one-time consolidation.
+        "users_archive": {
             source_uid: {"wallet": {"credits": 0.0, "staked": 0.0}},
         },
         "ledger": [
@@ -419,6 +423,81 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     assert evidence["resolves_gap"] is False
     assert consolidation["verification_failures"] == ["source_account_cleared"]
     assert db == before
+
+
+def test_missing_source_account_without_zeroed_archive_does_not_resolve_alpha_gap():
+    target_uid = "8789977826"
+    source_uid = "8791275334"
+    db = {
+        "users": {
+            target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+        },
+        "ledger": [
+            {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
+             "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-20T14:18:59.208393+00:00", "uid": target_uid,
+             "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": source_uid, "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"time": "2026-08-25T14:20:44.705458+00:00", "uid": target_uid,
+             "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake",
+             "meta": {"staked_before": 136, "staked_after": 236}},
+        ],
+    }
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    assert result["resolved_gap_count"] == 0
+    consolidation = result["findings"][0]["source_evidence"]["alpha_consolidations"][0]
+    assert consolidation["resolves_gap"] is False
+    assert consolidation["verification_failures"] == ["source_account_cleared"]
+
+
+def test_unrelated_later_zero_before_does_not_prove_alpha_cleared_source():
+    target_uid = "8789977826"
+    source_uid = "8791275334"
+    db = {
+        "users": {
+            target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+            source_uid: {"wallet": {"credits": 10449.0, "staked": 50.0}},
+        },
+        "ledger": [
+            {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
+             "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-20T14:18:59.208393+00:00", "uid": target_uid,
+             "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": source_uid, "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"time": "2026-08-25T14:20:44.705458+00:00", "uid": target_uid,
+             "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake",
+             "meta": {"staked_before": 136, "staked_after": 236}},
+            # A first post-event source movement with a non-zero opening value
+            # must not be overridden by a later, unrelated before=0 row.
+            {"time": "2026-08-26T09:00:00+00:00", "uid": source_uid,
+             "before": 100.0, "amount": -100.0, "after": 0.0,
+             "reason": "old:source_adjustment"},
+            {"time": "2026-08-27T09:00:00+00:00", "uid": source_uid,
+             "before": 0.0, "amount": 5.0, "after": 5.0,
+             "reason": "later:unrelated_activity"},
+        ],
+    }
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    assert result["resolved_gap_count"] == 0
+    consolidation = result["findings"][0]["source_evidence"]["alpha_consolidations"][0]
+    assert consolidation["resolves_gap"] is False
+    assert consolidation["verification_failures"] == ["source_account_cleared"]
 
 
 def test_unverified_alpha_consolidation_near_miss_stays_blocked():
