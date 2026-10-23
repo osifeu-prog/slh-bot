@@ -337,31 +337,74 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
             
-            # FIX: Check if source was 0 immediately after alpha (Row 53 before=0 proves it)
-            # Source got 20 credits in Row 53 with before=0, so it was 0 after Row 2, now has 5 after spending 15
+            # Only source balance evidence after this exact consolidation can support
+            # clearance. Do not let an unrelated later zero balance retroactively
+            # prove that the consolidation cleared the source account.
             source_was_zero_after_alpha = False
             try:
-                for r in db.get("ledger", []):
-                    if not isinstance(r, dict):
+                for source_row_index in range(index + 1, len(ledger)):
+                    source_row = ledger[source_row_index]
+                    if not isinstance(source_row, dict):
                         continue
-                    if str(r.get("uid") or "") == source_uid:
-                        b = _number(r.get("before"))
-                        if b is not None and abs(b) <= EPSILON:
-                            source_was_zero_after_alpha = True
-                            break
+                    if str(source_row.get("uid") or "").strip() != source_uid:
+                        continue
+                    source_before = _number(source_row.get("before"))
+                    source_after = _number(source_row.get("after"))
+                    if source_before is None or source_after is None:
+                        continue
+                    # The first subsequent source balance movement is the only
+                    # ledger row used to infer the source's post-event state.
+                    source_was_zero_after_alpha = abs(source_before) <= EPSILON
+                    break
             except Exception:
                 source_was_zero_after_alpha = False
+
+            archived_users = db.get("users_archive")
+            archived_user = (
+                archived_users.get(source_uid)
+                if isinstance(archived_users, dict)
+                else None
+            )
+            archived_wallet = (
+                archived_user.get("wallet")
+                if isinstance(archived_user, dict)
+                else None
+            )
+            archived_credits = (
+                _number(archived_wallet.get("credits"))
+                if isinstance(archived_wallet, dict)
+                else None
+            )
+            archived_staked = (
+                _number(archived_wallet.get("staked"))
+                if isinstance(archived_wallet, dict)
+                else None
+            )
+            source_archived_cleared = (
+                archived_credits is not None
+                and archived_staked is not None
+                and abs(archived_credits) <= EPSILON
+                and abs(archived_staked) <= EPSILON
+            )
 
             if isinstance(source_user, dict):
                 source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
                 source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
                 source_account_cleared = (
-                    (source_credits is not None and source_staked is not None
-                     and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON)
+                    (
+                        source_credits is not None
+                        and source_staked is not None
+                        and abs(source_credits) <= EPSILON
+                        and abs(source_staked) <= EPSILON
+                    )
                     or source_was_zero_after_alpha
                 )
             else:
-                source_account_cleared = True
+                # Historical source-account removal is accepted only when the
+                # archived wallet itself confirms both asset balances are zero.
+                source_account_cleared = (
+                    source_archived_cleared or source_was_zero_after_alpha
+                )
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
