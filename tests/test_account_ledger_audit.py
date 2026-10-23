@@ -326,7 +326,7 @@ def test_historical_alpha_without_event_linked_source_clearance_stays_blocked():
     assert result["continuity_break_count"] == 1
     assert result["resolved_gap_count"] == 0
     finding = result["findings"][0]
-    assert finding["type"] == "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+    assert finding["type"] == "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
     assert finding["reconciled"] is False
     evidence = finding["source_evidence"]
     assert evidence["resolves_gap"] is False
