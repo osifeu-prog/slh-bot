@@ -265,6 +265,8 @@ def test_ledger_evidence_command_is_private_owner_only_and_redacts_other_account
     assert "source=giveme" in output
     assert "TRANSFER-owner-test" in output
     assert "processed_records_matching=1" in output
+    assert "OWNER TRANSFER ROW #199" in output
+    assert "before=2.191775" in output
     assert "seller_payout=0.9" in output
     assert "other-account row; details withheld" in output
     assert "PRIVATE_OTHER_UID" not in output

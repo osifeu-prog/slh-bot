@@ -507,13 +507,16 @@ def register(bot, context=None):
                     f"created_at={_safe_report_fragment(purchase.get('created_at'), 48)}"
                 )
             if seen_transfer_ids:
-                transfer_rows = 0
-                for row in ledger:
+                transfer_rows = []
+                for row_index, row in enumerate(ledger):
                     if not isinstance(row, dict):
                         continue
                     meta = row.get("meta")
-                    if isinstance(meta, dict) and str(meta.get("transfer_id") or "") in seen_transfer_ids:
-                        transfer_rows += 1
+                    meta = meta if isinstance(meta, dict) else {}
+                    linked_id = str(meta.get("transfer_id") or row.get("transfer_id") or "").strip()
+                    if linked_id not in seen_transfer_ids:
+                        continue
+                    transfer_rows.append((row_index, row, linked_id))
                 processed = db.get("processed_transfers")
                 processed = processed if isinstance(processed, dict) else {}
                 processed_matches = sum(
@@ -521,7 +524,7 @@ def register(bot, context=None):
                     for value in processed.values()
                     if (
                         isinstance(value, dict)
-                        and str(value.get("transfer_id") or "") in seen_transfer_ids
+                        and str(value.get("transfer_id") or "").strip() in seen_transfer_ids
                     )
                     or (
                         isinstance(value, str)
@@ -530,9 +533,22 @@ def register(bot, context=None):
                 )
                 lines += [
                     "",
-                    f"TRANSFER CONTEXT: matched_ledger_rows={transfer_rows} "
+                    f"TRANSFER CONTEXT: matched_ledger_rows={len(transfer_rows)} "
                     f"processed_records_matching={processed_matches}",
                 ]
+                for row_index, row, linked_id in transfer_rows[:8]:
+                    row_uid = str(row.get("uid") or "").strip()
+                    if row_uid != uid:
+                        lines.append("  TRANSFER ROW: other-account details withheld")
+                        continue
+                    lines.append(
+                        f"  OWNER TRANSFER ROW #{row_index}: "
+                        f"reason={_safe_report_fragment(row.get('reason'), 48)} "
+                        f"before={_safe_report_fragment(row.get('before'), 24)} "
+                        f"amount={_safe_report_fragment(row.get('amount'), 24)} "
+                        f"after={_safe_report_fragment(row.get('after'), 24)} "
+                        f"transfer_id={_safe_report_fragment(linked_id, 48)}"
+                    )
             lines += [
                 "",
                 "This report exposes detailed values only for the owner’s own ledger rows.",
