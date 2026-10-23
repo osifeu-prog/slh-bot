@@ -2,6 +2,8 @@ from copy import deepcopy
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from core import periodic_release_audit as target
 
 
@@ -258,6 +260,32 @@ def test_ledger_pass_requires_tail_match_and_zero_blockers():
     contradictory = deepcopy(good)
     contradictory["blocking_finding_count"] = 1
     assert not target._valid_ledger_result(contradictory)
+
+
+def test_periodic_worker_notifies_owner_when_audit_raises():
+    class FakeBot:
+        def __init__(self):
+            self.messages = []
+
+        def send_message(self, **kwargs):
+            self.messages.append(kwargs)
+
+    class StopLoop(Exception):
+        pass
+
+    bot = FakeBot()
+    logs = []
+    with patch("core.periodic_release_audit.run_once", side_effect=RuntimeError("simulated")), patch(
+        "core.periodic_release_audit.time.sleep", side_effect=StopLoop
+    ):
+        with pytest.raises(StopLoop):
+            target.run_periodic(bot, logs.append, interval_seconds=60)
+
+    assert len(bot.messages) == 1
+    assert bot.messages[0]["chat_id"] == int(target.OWNER_ID)
+    assert "AUDIT_WORKER_EXCEPTION:RuntimeError" in bot.messages[0]["text"]
+    assert "status=BLOCKED" in "\n".join(logs)
+
 
 
 class FakeBot:
