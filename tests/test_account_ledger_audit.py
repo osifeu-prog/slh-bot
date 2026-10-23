@@ -424,6 +424,13 @@ def test_alpha_consolidation_reports_current_wallet_is_not_historical_clearance_
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
     assert consolidation["verification_failures"] == ["credits_delta_matches", "source_account_cleared"]
+    assert consolidation["source_clearance_evidence"] == {
+        "active_source_user_present": True,
+        "archive_record_found": False,
+        "archive_wallet_found": False,
+        "archived_credits_explicit_zero": False,
+        "archived_staked_explicit_zero": False,
+    }
     assert db == before
 
 
