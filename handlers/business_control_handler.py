@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 
 import state_manager
 
+from core import revenue_ledger
+
 MAX_MESSAGE = 3800
 
 
@@ -68,8 +70,7 @@ def _users_report(days):
 
 def _revenue_report(days):
     db = state_manager.load_db()
-    rows = db.get("revenue_ledger", [])
-    rows = rows if isinstance(rows, list) else []
+    rows = revenue_ledger.reportable_rows(db)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     period = []
     for row in rows:
@@ -91,20 +92,20 @@ def _revenue_report(days):
             customers.add(str(row["uid"]))
 
     lines = [
-        "💰 SLH REVENUE",
+        "💰 SLH GROSS RECEIPTS (NOT PROFIT)",
         "",
         f"תקופה: {days} ימים",
-        f"אירועי הכנסה מאומתים: {len(period)}",
+        f"אירועי תקבול ברוטו שעברו אימות מקומי: {len(period)}",
         f"לקוחות משלמים: {len(customers)}",
     ]
     for currency, total in sorted(totals.items()):
         lines.append(f"• {currency}: {total:g}")
     if not period:
-        lines.append("• כרגע אין אירועי הכנסה מאומתים בתקופה.")
+        lines.append("• אין אירועי הכנסה שעברו אימות מקומי בתקופה.")
     lines += [
         "",
-        "מקור: revenue_ledger.",
-        "הוצאה פנימית של Credits אינה נחשבת להכנסה כספית.",
+        "מקור: revenue_ledger עם התאמה לרשומת התשלום/ההזמנה המקומית.",
+        "הסכומים הם תקבולים ברוטו, לא רווח; עמלות, עלויות, החזרים והתחייבויות לא קוזזו. אימות חי מול Telegram בנפרד.",
     ]
     return "\n".join(lines)
 
@@ -185,17 +186,16 @@ def _registered_bot_count():
 def _business_summary():
     db = state_manager.load_db()
     users = db.get("users", {})
-    revenue = db.get("revenue_ledger", [])
     orders = db.get("star_item_orders", {})
     vip = db.get("vip_subscriptions", {})
     users = users if isinstance(users, dict) else {}
-    revenue = revenue if isinstance(revenue, list) else []
+    revenue_rows = revenue_ledger.reportable_rows(db)
     orders = orders if isinstance(orders, dict) else {}
     vip = vip if isinstance(vip, dict) else {}
     xtr = sum(
         float(r.get("amount", 0) or 0)
-        for r in revenue
-        if isinstance(r, dict) and str(r.get("currency", "")) == "XTR"
+        for r in revenue_rows
+        if str(r.get("currency", "")).strip().upper() == "XTR"
     )
     active_vip = sum(
         1
@@ -210,8 +210,8 @@ def _business_summary():
     return (
         "📊 SLH BUSINESS CONTROL\n\n"
         f"👥 Users: {len(users)}\n"
-        f"💰 Verified revenue: {xtr:g} XTR\n"
-        f"🧾 Revenue events: {len(revenue)}\n"
+        f"💰 Verified gross receipts (not profit): {xtr:g} XTR\n"
+        f"🧾 Revenue events: {len(revenue_rows)}\n"
         f"👑 Active VIP: {active_vip}\n"
         f"🛍 Fulfilled Stars orders: {fulfilled}\n"
         f"🤖 Registered bots: {_registered_bot_count()}\n\n"
