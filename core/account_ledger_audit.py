@@ -1,8 +1,9 @@
 """Read-only diagnostics for a single user's canonical Credits ledger sequence.
 
-This module never repairs or rewrites balances. It may reconcile a specifically
-allow-listed historical transition only when its version-controlled source
-snapshot and exact source/destination deltas match. Domain hints remain heuristic.
+This module never repairs or rewrites balances. Historical asset-migration context
+cannot reconcile a Credits gap unless the Credits component itself matches the
+observed Credits delta. Staked values never explain Credits continuity gaps.
+Domain hints remain heuristic.
 """
 from __future__ import annotations
 
@@ -12,13 +13,13 @@ from typing import Any
 EPSILON = 1e-8
 MAX_FINDINGS = 25
 
-# Source-backed, one-time consolidation found in the version-controlled DB
-# transition at d013b914bbca1b6c2f50e768d461213ae1cbfbef. That commit records
-# the source wallet (10449 Credits + 50 staked), removes that source account,
-# and moves the destination Credits wallet from 1316 to 11815. The ledger row
-# is at index 2 in the persisted history. This allow-list is deliberately exact:
-# it does not authorize generic alpha_consolidate rows.
-_VERIFIED_ALPHA_CONSOLIDATION = {
+# Known one-time alpha consolidation in the version-controlled DB transition
+# at d013b914bbca1b6c2f50e768d461213ae1cbfbef. The source snapshot records
+# 10449 Credits and 50 Staked, while destination Credits move from 1316 to
+# 11815 (a 10499 Credits delta). The 50 Staked component cannot explain the
+# extra 50 Credits. Keep the exact event tuple for diagnostics; it is not a
+# reconciliation unless Credits-only source/destination evidence matches.
+_KNOWN_ALPHA_CONSOLIDATION_CONTEXT = {
     "time": "2026-08-22T16:12:41.978584+00:00",
     "from": "8791275334",
     "to": "8789977826",
@@ -405,7 +406,7 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 source_account_cleared = (
                     source_archived_cleared or source_was_zero_after_alpha
                 )
-            verified = _VERIFIED_ALPHA_CONSOLIDATION
+            verified = _KNOWN_ALPHA_CONSOLIDATION_CONTEXT
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
                 "previous_index_matches": previous_index == verified["previous_index"],
@@ -430,9 +431,12 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     next_before is not None
                     and abs(next_before - verified["next_before"]) <= EPSILON
                 ),
-                "combined_delta_matches": (
-                    observed_delta is not None
-                    and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                # Credits continuity must match the Credits component alone.
+                # Staked is a distinct asset and must never close a Credits gap.
+                "credits_component_matches_delta": (
+                    credits_component is not None
+                    and observed_delta is not None
+                    and abs(observed_delta - credits_component) <= EPSILON
                 ),
                 "source_account_cleared": source_account_cleared,
             }
@@ -452,6 +456,8 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     and observed_delta is not None
                     and abs(credits_component - observed_delta) <= EPSILON
                 ),
+                # Diagnostic only. This mixed-asset sum is not a reconciliation
+                # criterion for the Credits sequence.
                 "credits_plus_staked_matches_delta": (
                     credits_component is not None
                     and staked_component is not None
