@@ -209,7 +209,12 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     db = {
         "users": {UID: {"wallet": {"credits": 7.091775}}},
         "processed_transfers": {
-            "TG-TRANSFER-owner-191058": "TRANSFER-20261005145750197186",
+            "TG-TRANSFER-owner-191058": {
+                "transfer_id": "TRANSFER-20261005145750197186",
+                "sender_uid": UID,
+                "recipient_uid": "buyer",
+                "amount": 1.0,
+            },
         },
         "purchases": {
             "purchase:telegram_buy:buyer:191618": {
