@@ -51,15 +51,33 @@ def _ledger_result():
 
 
 def _release_result(status="DEGRADED"):
+    check_names = {
+        "Telegram runtime",
+        "AI intake",
+        "Mini App auth",
+        "Internal exchange",
+        "Stars revenue",
+        "External settlement gates",
+        "Participation",
+    }
+    checks = {
+        name: {"status": "GREEN", "detail": f"{name} test result"}
+        for name in check_names
+    }
+    if status == "DEGRADED":
+        checks["Internal exchange"] = {
+            "status": "DEGRADED",
+            "detail": "public gate=CLOSED; owner approval remains required",
+        }
+    elif status == "BLOCKED":
+        checks["Internal exchange"] = {
+            "status": "BLOCKED",
+            "detail": "owner ledger blocker",
+        }
     return {
         "overall_status": status,
-        "checks": {
-            "Internal exchange": {
-                "status": "DEGRADED" if status == "DEGRADED" else status,
-                "detail": "public gate=CLOSED; owner approval remains required",
-            },
-        },
-        "blockers": [],
+        "checks": checks,
+        "blockers": ["Internal exchange: owner ledger blocker"] if status == "BLOCKED" else [],
     }
 
 
@@ -196,6 +214,50 @@ def test_notification_is_sent_once_per_changed_blocker_signature():
     assert "READ ONLY" in bot.messages[0]["text"]
     assert signature_again == signature
     assert status_again == status
+
+    changed_gap = deepcopy(same_blocker_later)
+    changed_gap["ledger"]["findings"] = [{
+        "type": "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE",
+        "previous_index": 1,
+        "next_index": 3,
+        "delta_to_explain": 5.0,
+        "resolves_gap": False,
+        "source_match_status": "CONTEXT_ONLY_REQUIRES_RECONCILIATION",
+    }]
+    changed_signature, changed_status = target._deliver_if_changed(
+        changed_gap, bot, logs.append, signature_again, status_again
+    )
+    assert len(bot.messages) == 2
+    assert changed_signature != signature_again
+    assert changed_status == "BLOCKED"
+
+
+
+
+def test_release_report_validation_requires_complete_and_consistent_check_set():
+    good = _release_result("DEGRADED")
+    assert target._valid_release_result(good)
+
+    incomplete = deepcopy(good)
+    incomplete["checks"].pop("Stars revenue")
+    assert not target._valid_release_result(incomplete)
+
+    inconsistent = deepcopy(good)
+    inconsistent["overall_status"] = "GREEN"
+    assert not target._valid_release_result(inconsistent)
+
+
+def test_ledger_pass_requires_tail_match_and_zero_blockers():
+    good = _ledger_result()
+    assert target._valid_ledger_result(good)
+
+    bad_tail = deepcopy(good)
+    bad_tail["current_balance_matches_tail"] = False
+    assert not target._valid_ledger_result(bad_tail)
+
+    contradictory = deepcopy(good)
+    contradictory["blocking_finding_count"] = 1
+    assert not target._valid_ledger_result(contradictory)
 
 
 class FakeBot:
