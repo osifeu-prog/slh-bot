@@ -503,3 +503,88 @@ def test_register_wires_only_the_allowlisted_typed_exchange_phrase_before_fallba
 
     open_gate.assert_called_once_with()
     assert bot.replies and bot.replies[-1][1] == "GUARDED_RESULT"
+
+def test_guarded_opening_proof_copies_actual_ledger_check_into_validator():
+    import handlers.exchange_handler as exchange_handler
+
+    check = {
+        "ok": True,
+        "public_gate": "CLOSED",
+        "verdict": "READY_TO_OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_status": "PASS",
+        "account_ledger_integrity": True,
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+    }
+    result = {
+        "status": "DEPLOYMENT_SUCCESS",
+        "commit": "a" * 40,
+        "deployment_id": "deployment-open",
+    }
+    captured = {}
+
+    def validate_before_mutation(proof):
+        captured.update(proof)
+        _validator()(proof)
+        return result
+
+    with patch.object(exchange_handler.state_manager, "load_db", return_value={}), patch(
+        "core.system_checks.check_exchange", return_value=check
+    ), patch(
+        "core.railway_control.request_exchange_gate_open",
+        side_effect=validate_before_mutation,
+    ), patch.object(
+        exchange_handler, "_wait_for_public_exchange_open", return_value={"verified": True}
+    ), patch.object(
+        exchange_handler, "_prepare_verified_exchange_broadcast_preview", return_value="PREVIEW"
+    ):
+        answer = exchange_handler._request_guarded_exchange_gate_open()
+
+    assert captured["account_ledger_status"] == check["account_ledger_status"]
+    assert captured["account_ledger_integrity"] is check["account_ledger_integrity"]
+    assert captured["public_gate"] == check["public_gate"]
+    assert captured["verdict"] == check["verdict"]
+    assert answer.startswith("✅ EXCHANGE OPEN VERIFIED")
+
+
+@pytest.mark.parametrize(
+    "ledger_change",
+    [
+        {"account_ledger_status": "BLOCKED"},
+        {"account_ledger_integrity": False},
+    ],
+)
+def test_guarded_opening_rejects_nonpassing_ledger_before_request(ledger_change):
+    import handlers.exchange_handler as exchange_handler
+
+    check = {
+        "ok": True,
+        "public_gate": "CLOSED",
+        "verdict": "READY_TO_OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_status": "PASS",
+        "account_ledger_integrity": True,
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+    }
+    check.update(ledger_change)
+
+    with patch.object(exchange_handler.state_manager, "load_db", return_value={}), patch(
+        "core.system_checks.check_exchange", return_value=check
+    ), patch(
+        "core.railway_control.request_exchange_gate_open"
+    ) as open_gate:
+        answer = exchange_handler._request_guarded_exchange_gate_open()
+
+    open_gate.assert_not_called()
+    assert "Exchange gate נשאר CLOSED" in answer
+
