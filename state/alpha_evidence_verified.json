@@ -1,0 +1,25 @@
+﻿{
+    "alpha_consolidation":  {
+                                "credits":  10449,
+                                "observed_delta":  10499,
+                                "delta_matches_credits_plus_stake":  true,
+                                "staked_moved":  50
+                            },
+    "gaps":  {
+                 "gap_1_alpha_10499":  "10449+50 proven by 15 snapshots, file upload_1792769324_10ddd120730ceaa3.txt",
+                 "gap_2_minus_10771_9":  "staking:unstake 10771.9 -\u003e test_grant 0, manual_reset_before_giveme, ADJ-20261020-10771-9",
+                 "gap_3_plus_5":  "p2p 1.19-\u003e6.19 =5, linked to purchase:telegram_buy:5010371391:191618 and TRANSFER-20261005145750197186, ADJ-20261020-PLUS-5"
+             },
+    "generated":  "2026-10-24T07:46:43.8211222Z",
+    "verification":  {
+                         "next_owner_before":  11815,
+                         "source_archive_zero":  true,
+                         "snapshots_checked":  15,
+                         "alpha_evidence_rows":  15,
+                         "previous_owner_after":  1316,
+                         "readable_snapshots_with_owner":  15,
+                         "first_source_before_zero":  true,
+                         "source_wallet_zero":  true
+                     },
+    "owner_id":  "8789977826"
+}
