@@ -503,3 +503,80 @@ def test_register_wires_only_the_allowlisted_typed_exchange_phrase_before_fallba
 
     open_gate.assert_called_once_with()
     assert bot.replies and bot.replies[-1][1] == "GUARDED_RESULT"
+
+
+
+def test_guarded_opening_proof_forwards_canonical_account_ledger_fields():
+    from handlers import exchange_handler
+
+    check = {
+        "ok": True,
+        "public_gate": "CLOSED",
+        "verdict": "READY_TO_OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_status": "PASS",
+        "account_ledger_integrity": True,
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+    }
+    result = {
+        "status": "DEPLOYMENT_SUCCESS",
+        "previous": "0",
+        "configured": "1",
+        "commit": "a" * 40,
+        "deployment_id": "deployment-open",
+        "service": "slh-cloud-bot",
+        "environment": "production",
+    }
+
+    with patch.object(exchange_handler.state_manager, "load_db", return_value={}), patch(
+        "core.system_checks.check_exchange", return_value=check
+    ), patch(
+        "core.railway_control.request_exchange_gate_open", return_value=result
+    ) as request_open, patch.object(
+        exchange_handler, "_wait_for_public_exchange_open", return_value={"verified": True}
+    ), patch.object(
+        exchange_handler, "_prepare_verified_exchange_broadcast_preview", return_value="PREVIEW"
+    ):
+        answer = exchange_handler._request_guarded_exchange_gate_open()
+
+    assert "EXCHANGE OPEN VERIFIED" in answer
+    request_open.assert_called_once()
+    proof = request_open.call_args.args[0]
+    assert proof["account_ledger_status"] == "PASS"
+    assert proof["account_ledger_integrity"] is True
+    assert _validator()(proof)["account_ledger_status"] == "PASS"
+
+
+def test_guarded_opening_does_not_request_gate_change_when_ledger_is_blocked():
+    from handlers import exchange_handler
+
+    check = {
+        "ok": False,
+        "public_gate": "CLOSED",
+        "verdict": "BLOCKED",
+        "public_ready": False,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_status": "BLOCKED",
+        "account_ledger_integrity": False,
+        "account_ledger_blockers": ["ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY"],
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+        "detail": "account_ledger=BLOCKED",
+    }
+
+    with patch.object(exchange_handler.state_manager, "load_db", return_value={}), patch(
+        "core.system_checks.check_exchange", return_value=check
+    ), patch("core.railway_control.request_exchange_gate_open") as request_open:
+        answer = exchange_handler._request_guarded_exchange_gate_open()
+
+    assert "CLOSED" in answer
+    assert "BLOCKED" in answer
+    request_open.assert_not_called()
