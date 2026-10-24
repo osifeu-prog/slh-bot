@@ -641,3 +641,79 @@ def test_owner_attestation_with_wrong_rows_or_amount_does_not_match_gap():
         assert evidence["resolves_gap"] is False
         assert evidence["source_match_status"] == "NO_DIRECT_SOURCE_MATCH"
         assert "owner_attestation_context" not in evidence
+
+def test_hardcoded_owner_approved_gaps_still_require_source_evidence():
+    """A hard-coded owner approval is context, not source-backed reconciliation."""
+    cases = [
+        {
+            "previous_index": 65,
+            "next_index": 66,
+            "gap_id": "gap_1_minus_10771_9",
+            "delta": -10771.9,
+            "previous": {
+                "uid": "8789977826", "before": 10671.9, "amount": 100.0,
+                "after": 10771.9, "reason": "staking:unstake",
+            },
+            "next": {
+                "uid": "8789977826", "before": 0.0, "amount": 50.0,
+                "after": 50.0, "reason": "admin:test_grant",
+            },
+            "wallet_tail": 50.0,
+        },
+        {
+            "previous_index": 199,
+            "next_index": 202,
+            "gap_id": "gap_2_plus_5_0",
+            "delta": 5.0,
+            "previous": {
+                "uid": "8789977826", "before": 2.191775, "amount": -1.0,
+                "after": 1.191775, "reason": "p2p:transfer_sent",
+            },
+            "next": {
+                "uid": "8789977826", "before": 6.191775, "amount": 0.9,
+                "after": 7.091775, "reason": "store:p2p_sale",
+            },
+            "wallet_tail": 7.091775,
+        },
+    ]
+    for case in cases:
+        owner_uid = "8789977826"
+        previous_index = case["previous_index"]
+        next_index = case["next_index"]
+        ledger = [{"uid": "other-account"} for _ in range(previous_index)]
+        ledger.append(case["previous"])
+        while len(ledger) < next_index:
+            ledger.append({"uid": "other-account"})
+        ledger.append(case["next"])
+        db = {
+            "users": {owner_uid: {"wallet": {"credits": case["wallet_tail"]}}},
+            "ledger": ledger,
+            "owner_attestations": [{
+                "time": "2026-10-20T10:30:15Z",
+                "uid": owner_uid,
+                "type": "ledger_gap_attestation",
+                "gaps": [{
+                    "id": case["gap_id"],
+                    "rows": [previous_index, next_index],
+                    "amount": case["delta"],
+                    "cause": "owner-approved test artifact",
+                }],
+                "statement": "Owner approves test classification.",
+            }],
+        }
+        before = deepcopy(db)
+        result = audit_account_ledger(db, owner_uid)
+
+        assert result["status"] == "BLOCKED"
+        assert result["continuity_break_count"] == 1
+        assert result["resolved_gap_count"] == 0
+        assert result["current_balance_matches_tail"] is True
+        assert db == before
+        finding = next(item for item in result["findings"] if "source_evidence" in item)
+        evidence = finding["source_evidence"]
+        assert finding["reconciled"] is False
+        assert finding["source_evidence_required"] is True
+        assert evidence["resolves_gap"] is False
+        assert evidence["owner_attestation_context"]["independent_source_evidence"] is False
+        assert "allowlisted_adjustment" not in evidence
+
