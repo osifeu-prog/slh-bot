@@ -46,7 +46,7 @@ class StarsInvoiceTest(unittest.TestCase):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$abc"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             link = stars_invoice.create_invoice_link(
@@ -64,12 +64,30 @@ class StarsInvoiceTest(unittest.TestCase):
         self.assertNotIn("provider_token", body)
         self.assertNotIn("subscription_period", body)
 
+    def test_create_link_fails_closed_before_telegram_api(self):
+        req = stars_invoice.build_invoice_request("123", "credit_pack", str(CREDIT_PACKS[0].stars))
+        with (
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "0"}),
+            mock.patch("core.stars_invoice.requests.post") as post,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "STARS_PAYMENTS_CLOSED"):
+                stars_invoice.create_invoice_link(req)
+        post.assert_not_called()
+
+    def test_stars_gate_requires_exact_one(self):
+        from core.stars_gate import stars_payments_open
+        for value in ("", "0", "true", "yes", "2"):
+            with self.subTest(value=value), mock.patch.dict("os.environ", {"STARS_PAYMENTS_OPEN": value}):
+                self.assertFalse(stars_payments_open())
+        with mock.patch.dict("os.environ", {"STARS_PAYMENTS_OPEN": "1"}):
+            self.assertTrue(stars_payments_open())
+
     def test_create_link_includes_subscription_period_for_vip(self):
         req = stars_invoice.build_invoice_request("123", "vip_monthly", "vip_monthly")
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$vip"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             stars_invoice.create_invoice_link(req)

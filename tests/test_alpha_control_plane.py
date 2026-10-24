@@ -206,6 +206,8 @@ def test_student_profile_blocks_legacy_env_developer_grant(monkeypatch):
 
 
 def test_vip_invoice_link_request_contains_stars_subscription(monkeypatch):
+    # This test verifies the VIP invoice payload, not the global checkout gate.
+    monkeypatch.setenv("STARS_PAYMENTS_OPEN", "1")
     from handlers import payment_handler
 
     captured = {}

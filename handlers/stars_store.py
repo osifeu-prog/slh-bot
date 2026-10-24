@@ -13,6 +13,10 @@ from core.stars_gate import (
 def register(bot):
     @bot.message_handler(commands=['buystars'])
     def buystars(m):
+        from core.stars_gate import stars_payments_open
+        if not stars_payments_open():
+            bot.reply_to(m, "⛔ תשלומי Telegram Stars סגורים כרגע. לא נוצרה חשבונית חדשה.")
+            return
         parts = (m.text or "").split(maxsplit=1)
         if len(parts) < 2:
             if not store_stars_sales_open():
