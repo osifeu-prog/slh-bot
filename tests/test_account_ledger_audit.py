@@ -641,3 +641,55 @@ def test_owner_attestation_with_wrong_rows_or_amount_does_not_match_gap():
         assert evidence["resolves_gap"] is False
         assert evidence["source_match_status"] == "NO_DIRECT_SOURCE_MATCH"
         assert "owner_attestation_context" not in evidence
+
+
+def test_allowlisted_manual_adjustment_is_not_counted_as_source_verified():
+    target_uid = "8789977826"
+    ledger = [
+        {"uid": "other-user", "before": 0.0, "amount": 0.0, "after": 0.0, "reason": "other"}
+        for _ in range(67)
+    ]
+    ledger[65] = {
+        "time": "2026-09-09T14:24:11.455955+00:00",
+        "uid": target_uid, "before": 10671.9, "amount": 100.0, "after": 10771.9,
+        "reason": "staking:unstake",
+    }
+    ledger[66] = {
+        "time": "2026-09-09T17:35:55.403916+00:00",
+        "uid": target_uid, "before": 0.0, "amount": 50.0, "after": 50.0,
+        "reason": "admin:test_grant", "meta": {"source": "giveme"},
+    }
+    db = {
+        "users": {target_uid: {"wallet": {"credits": 50.0}}},
+        "ledger": ledger,
+        "owner_attestations": [{
+            "time": "2026-10-20T10:30:15.674966+00:00",
+            "uid": target_uid,
+            "type": "ledger_gap_attestation",
+            "gaps": [{
+                "id": "gap_1_minus_10771_9",
+                "rows": [65, 66],
+                "amount": -10771.9,
+                "cause": "manual_reset_before_giveme",
+            }],
+            "statement": "Owner declares this was a manual operator action.",
+        }],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "PASS"
+    assert result["observed_discontinuity_count"] == 1
+    assert result["resolved_gap_count"] == 1
+    assert result["source_verified_gap_count"] == 0
+    assert result["approved_adjustment_count"] == 1
+    finding = result["findings"][0]
+    assert finding["type"] == "RECONCILED_APPROVED_HISTORICAL_ADJUSTMENT"
+    evidence = finding["source_evidence"]
+    assert evidence["resolves_gap"] is True
+    assert evidence["source_match_status"] == "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED"
+    assert evidence["independent_source_evidence"] is False
+    assert evidence["resolution_basis"] == "EXPLICIT_OWNER_APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLIST"
+    assert evidence["allowlisted_adjustment"]["approval_commit"] == "5e4f349edda48fb4d64f0ba7afd9f221be552490"
+    assert db == before

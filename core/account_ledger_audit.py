@@ -47,7 +47,7 @@ _APPROVED_HISTORICAL_ADJUSTMENTS = {
         "approved_by": "owner:8789977826",
         "approved_at": "2026-10-20T10:30:15Z",
         "rationale": "manual_reset_before_giveme; not a code bug",
-        "source_commit": "b467b937",
+        "approval_commit": "5e4f349edda48fb4d64f0ba7afd9f221be552490",
     },
     "gap_2_plus_5_0": {
         "uid": "8789977826",
@@ -56,7 +56,7 @@ _APPROVED_HISTORICAL_ADJUSTMENTS = {
         "approved_by": "owner:8789977826",
         "approved_at": "2026-10-20T10:30:15Z",
         "rationale": "manual_refund_test_bill; not a code bug",
-        "source_commit": "b467b937",
+        "approval_commit": "5e4f349edda48fb4d64f0ba7afd9f221be552490",
     },
 }
 
@@ -519,19 +519,6 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
     verified_alpha = any(
         item.get("resolves_gap") is True for item in alpha_consolidations
     )
-    evidence["source_match_status"] = (
-        "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
-        if verified_alpha
-        else (
-            "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE"
-            if owner_attestation_context is not None
-            else (
-                "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
-                if alpha_consolidations
-                else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
-            )
-        )
-    )
     allowlisted_attestation = False
     if isinstance(owner_attestation_context, dict):
         gap_id = owner_attestation_context.get("gap_id")
@@ -542,15 +529,52 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             and approved.get("rows") == owner_attestation_context.get("rows")
             and owner_attestation_context.get("claimed_delta") is not None
             and abs(approved.get("amount", 0) - owner_attestation_context.get("claimed_delta")) <= EPSILON
-            and approved.get("source_commit")
+            and approved.get("approval_commit")
         ):
             allowlisted_attestation = True
             evidence["allowlisted_adjustment"] = {
                 "gap_id": gap_id,
-                "source_commit": approved.get("source_commit"),
+                "approval_commit": approved.get("approval_commit"),
                 "approved_by": approved.get("approved_by"),
                 "approved_at": approved.get("approved_at"),
+                "rationale": approved.get("rationale"),
             }
+
+    evidence["source_match_status"] = (
+        "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
+        if verified_alpha
+        else (
+            "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED"
+            if allowlisted_attestation
+            else (
+                "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE"
+                if owner_attestation_context is not None
+                else (
+                    "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+                    if alpha_consolidations
+                    else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
+                )
+            )
+        )
+    )
+    evidence["resolution_basis"] = (
+        "VERSION_CONTROLLED_SOURCE_AND_DESTINATION_STATE_MATCH"
+        if verified_alpha
+        else (
+            "EXPLICIT_OWNER_APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLIST"
+            if allowlisted_attestation
+            else (
+                "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE"
+                if owner_attestation_context is not None
+                else (
+                    "CONTEXT_ONLY_REQUIRES_RECONCILIATION"
+                    if linked or alpha_consolidations
+                    else "NO_DIRECT_SOURCE_MATCH"
+                )
+            )
+        )
+    )
+    evidence["independent_source_evidence"] = bool(verified_alpha)
     evidence["resolves_gap"] = bool(verified_alpha or allowlisted_attestation)
     return evidence
 
@@ -564,6 +588,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         return {
             "scope": "read_only", "status": "BLOCKED", "uid": None,
             "rows_checked": 0, "continuity_break_count": 0,
+            "resolved_gap_count": 0, "source_verified_gap_count": 0,
+            "approved_adjustment_count": 0,
             "arithmetic_error_count": 0, "malformed_global_rows": 0,
             "current_balance_matches_tail": False, "findings": [],
             "blockers": ["UID_MISSING"],
@@ -572,6 +598,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         return {
             "scope": "read_only", "status": "BLOCKED", "uid": uid,
             "rows_checked": 0, "continuity_break_count": 0,
+            "resolved_gap_count": 0, "source_verified_gap_count": 0,
+            "approved_adjustment_count": 0,
             "arithmetic_error_count": 0, "malformed_global_rows": 0,
             "current_balance_matches_tail": False, "findings": [],
             "blockers": ["LEDGER_UNREADABLE"],
@@ -586,6 +614,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
     non_credits_rows_skipped = 0
     gap_count = 0
     resolved_gap_count = 0
+    source_verified_gap_count = 0
+    approved_adjustment_count = 0
     unresolved_gap_count = 0
     arithmetic_count = 0
     malformed_global_rows = 0
@@ -627,10 +657,25 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
             prev_domain = previous["domain_hint"]
             next_domain = summary["domain_hint"]
             source_evidence = _source_evidence_for_gap(db, previous, summary, uid=uid)
-            is_reconciled = source_evidence.get("resolves_gap") is True
+            source_match_status = str(source_evidence.get("source_match_status") or "")
+            is_source_verified = (
+                source_evidence.get("resolves_gap") is True
+                and source_match_status == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
+            )
+            is_approved_adjustment = (
+                source_evidence.get("resolves_gap") is True
+                and source_match_status == "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED"
+            )
+            # Fail closed on internally inconsistent or unrecognized resolution labels.
+            is_reconciled = is_source_verified or is_approved_adjustment
             if is_reconciled:
                 resolved_gap_count += 1
-                classification = "RECONCILED_ALPHA_CONSOLIDATION"
+                if is_source_verified:
+                    source_verified_gap_count += 1
+                    classification = "RECONCILED_ALPHA_CONSOLIDATION"
+                else:
+                    approved_adjustment_count += 1
+                    classification = "RECONCILED_APPROVED_HISTORICAL_ADJUSTMENT"
             else:
                 unresolved_gap_count += 1
                 if prev_domain in {"SLH_HINT", "CREDITS_HINT"} and next_domain in {"SLH_HINT", "CREDITS_HINT"} and prev_domain != next_domain:
@@ -703,6 +748,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         "continuity_break_count": unresolved_gap_count,
         "observed_discontinuity_count": gap_count,
         "resolved_gap_count": resolved_gap_count,
+        "source_verified_gap_count": source_verified_gap_count,
+        "approved_adjustment_count": approved_adjustment_count,
         "unresolved_continuity_break_count": unresolved_gap_count,
         "arithmetic_error_count": arithmetic_count,
         "malformed_global_rows": malformed_global_rows,

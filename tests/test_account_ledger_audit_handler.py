@@ -283,3 +283,71 @@ def test_ledger_evidence_command_rejects_non_owner_and_non_private_chat(monkeypa
         bot.handlers["check_ledger_evidence"](_message("/check_ledger_evidence", chat_type="group"))
     load_db.assert_not_called()
     assert "שיחה פרטית" in bot.replies[-1]
+
+
+def test_allowlisted_adjustment_is_not_reported_as_source_evidence(monkeypatch):
+    bot = _register(monkeypatch)
+    result = {
+        "scope": "read_only",
+        "status": "PASS",
+        "rows_checked": 2,
+        "credits_sequence_rows_checked": 2,
+        "non_credits_rows_skipped": 0,
+        "observed_discontinuity_count": 1,
+        "resolved_gap_count": 1,
+        "source_verified_gap_count": 0,
+        "approved_adjustment_count": 1,
+        "continuity_break_count": 0,
+        "unresolved_continuity_break_count": 0,
+        "arithmetic_error_count": 0,
+        "malformed_global_rows": 0,
+        "current_wallet_credits": 50.0,
+        "ledger_tail_after": 50.0,
+        "current_balance_matches_tail": True,
+        "findings": [{
+            "type": "RECONCILED_APPROVED_HISTORICAL_ADJUSTMENT",
+            "reconciled": True,
+            "source_evidence_required": False,
+            "previous": {
+                "index": 65, "reason": "staking:unstake",
+                "domain_hint": "CREDITS_HINT", "after": 10771.9,
+            },
+            "next": {
+                "index": 66, "reason": "admin:test_grant",
+                "domain_hint": "UNKNOWN_HINT", "before": 0.0,
+            },
+            "delta_to_explain": -10771.9,
+            "source_evidence": {
+                "source_match_status": "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED",
+                "resolution_basis": "EXPLICIT_OWNER_APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLIST",
+                "resolves_gap": True,
+                "independent_source_evidence": False,
+                "allowlisted_adjustment": {
+                    "approval_commit": "5e4f349edda48fb4d64f0ba7afd9f221be552490",
+                    "approved_by": "owner:8789977826",
+                },
+            },
+        }],
+        "findings_truncated": False,
+        "blockers": [],
+    }
+    with patch("state_manager.load_db", return_value={
+        "users": {OWNER_UID: {"wallet": {"credits": 50.0, "staked": 0.0}}},
+        "stake_positions": {},
+        "ledger": [],
+    }), patch(
+        "core.account_ledger_audit.audit_account_ledger", return_value=result
+    ), patch(
+        "handlers.system_checks_handler.check_exchange",
+        return_value={"public_gate": "CLOSED", "public_ready": False, "verdict": "BLOCKED",
+                      "detail": "account_ledger=PASS"},
+    ):
+        bot.handlers["check_owner_ledger"](_message())
+
+    output = bot.replies[-1]
+    assert "Source-evidence-verified gaps: 0" in output
+    assert "Approved historical adjustments (not independent source evidence): 1" in output
+    assert "Resolved gaps total: 1" in output
+    assert "RECONCILED_APPROVED_HISTORICAL_ADJUSTMENT" in output
+    assert "owner-approved adjustment accepted; independent source evidence absent" in output
+    assert "source evidence verified" not in output

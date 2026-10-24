@@ -621,7 +621,9 @@ def register(bot, context=None):
                 f"Credits sequence rows checked: {result.get('credits_sequence_rows_checked', result.get('rows_checked', 0))}",
                 f"Non-Credits rows skipped: {result.get('non_credits_rows_skipped', 0)}",
                 f"Observed discontinuities: {result.get('observed_discontinuity_count', 0)}",
-                f"Resolved with source evidence: {result.get('resolved_gap_count', 0)}",
+                f"Source-evidence-verified gaps: {result.get('source_verified_gap_count', 0)}",
+                f"Approved historical adjustments (not independent source evidence): {result.get('approved_adjustment_count', 0)}",
+                f"Resolved gaps total: {result.get('resolved_gap_count', 0)}",
                 f"Credits continuity breaks: {result.get('continuity_break_count', 0)}",
                 f"Unresolved Credits gaps: {result.get('unresolved_continuity_break_count', result.get('continuity_break_count', 0))}",
                 f"Row arithmetic errors: {result.get('arithmetic_error_count', 0)}",
@@ -655,9 +657,19 @@ def register(bot, context=None):
                     previous, next_row = item["previous"], item["next"]
                     evidence = item.get("source_evidence")
                     evidence = evidence if isinstance(evidence, dict) else {}
-                    reconciled = item.get("reconciled") is True or evidence.get("resolves_gap") is True
-                    if reconciled:
-                        evidence_status = "source evidence verified"
+                    match_status = str(evidence.get("source_match_status") or "").strip()
+                    reconciled = (
+                        item.get("reconciled") is True
+                        and evidence.get("resolves_gap") is True
+                        and match_status in {
+                            "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION",
+                            "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED",
+                        }
+                    )
+                    if reconciled and match_status == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION":
+                        evidence_status = "independent source evidence verified"
+                    elif reconciled and match_status == "APPROVED_HISTORICAL_ADJUSTMENT_ALLOWLISTED":
+                        evidence_status = "owner-approved adjustment accepted; independent source evidence absent"
                     elif item.get("source_evidence_required") is True:
                         evidence_status = "source evidence required"
                     else:
@@ -668,7 +680,6 @@ def register(bot, context=None):
                         f"{next_row.get('reason')}[{next_row.get('domain_hint')}] "
                         f"before={next_row.get('before')} delta={item.get('delta_to_explain')}; {evidence_status}"
                     )
-                    match_status = str(evidence.get("source_match_status") or "").strip()
                     if match_status:
                         lines.append(
                             f"  Source match: {match_status} · resolves_gap={evidence.get('resolves_gap') is True}"
