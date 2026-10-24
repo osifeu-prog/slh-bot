@@ -15,6 +15,7 @@ import hmac
 import json
 import os
 import re
+import threading
 import time
 import uuid
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -29,6 +30,9 @@ from store.grant_engine import apply_grant
 
 PAYPLUS_PROD = "https://restapi.payplus.co.il/api/v1.0"
 PAYPLUS_STAGING = "https://restapidev.payplus.co.il/api/v1.0"
+
+_card_recovery_lock = threading.Lock()
+_card_recovery_thread = None
 
 
 def _enabled() -> bool:
@@ -452,14 +456,22 @@ def _verify_provider_transaction(order: dict, callback_body: dict) -> dict:
     amount = summary.get("amount")
     currency = summary.get("currency")
     expected_amount = _money(order.get("amount"))
-    if amount is not None and expected_amount is not None and amount != expected_amount:
+    if amount is None or expected_amount is None:
+        raise ValueError("PAYPLUS_AMOUNT_MISSING")
+    if amount != expected_amount:
         raise ValueError("PAYPLUS_AMOUNT_MISMATCH")
-    if currency and currency != "ILS":
+    if not currency:
+        raise ValueError("PAYPLUS_CURRENCY_MISSING")
+    if currency != "ILS":
         raise ValueError("PAYPLUS_CURRENCY_MISMATCH")
 
-    tx_uid = summary.get("transaction_uid") or transaction_uid
+    tx_uid = summary.get("transaction_uid")
     if not tx_uid:
+        # Never substitute a callback-supplied identifier for the provider's
+        # server-side transaction reference.
         raise ValueError("PAYPLUS_TRANSACTION_UID_MISSING")
+    if transaction_uid and str(transaction_uid) != str(tx_uid):
+        raise ValueError("PAYPLUS_TRANSACTION_UID_MISMATCH")
     return {
         "transaction_uid": str(tx_uid),
         "verified": True,
@@ -603,19 +615,17 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
     if not order:
         raise ValueError("CARD_ORDER_NOT_FOUND")
 
-    if order.get("status") == "FULFILLED":
-        # Reconcile a missing revenue event on an exact replay, but never grant
-        # the product again. _fulfill checks the existing revenue row fail-closed.
-        result = _fulfill(order)
-        return {
-            "status": result.get("status", "duplicate"),
-            "order_id": order["order_id"],
-        }
-
+    # Every callback, including replay of a fulfilled order, must pass the
+    # same server-side provider lookup and exact amount/currency checks before
+    # it can touch the revenue ledger.
     try:
         verification = _verify_provider_transaction(order, body)
     except ValueError as exc:
         if str(exc) == "PAYPLUS_PAYMENT_NOT_APPROVED":
+            # A late/replayed non-approved callback must not cancel a previously
+            # fulfilled order or release inventory already associated with it.
+            if order.get("status") == "FULFILLED":
+                raise
             _update_order(
                 order["order_id"],
                 status="CANCELLED",
@@ -625,6 +635,19 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
             _release_inventory(order["order_id"])
             return {"status": "cancelled", "order_id": order["order_id"]}
         raise
+
+    if order.get("status") == "FULFILLED":
+        existing_tx = str(order.get("transaction_uid") or "").strip()
+        verified_tx = str(verification.get("transaction_uid") or "").strip()
+        if existing_tx and existing_tx != verified_tx:
+            raise ValueError("PAYPLUS_TRANSACTION_UID_MISMATCH")
+        # Preserve the fulfilled state; _fulfill only reconciles the idempotent
+        # revenue record and returns duplicate without granting the item again.
+        result = _fulfill(order)
+        return {
+            "status": result.get("status", "duplicate"),
+            "order_id": order["order_id"],
+        }
 
     updated = _update_order(
         order["order_id"],
@@ -713,7 +736,15 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
 
                 amount = summary.get("amount")
                 expected_amount = _money(current.get("amount"))
-                if amount is not None and expected_amount is not None and amount != expected_amount:
+                if amount is None or expected_amount is None:
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_AMOUNT_MISSING",
+                        updated_at=time.time(),
+                    )
+                    continue
+                if amount != expected_amount:
                     _update_order(
                         current["order_id"],
                         status="RECOVERABLE",
@@ -723,7 +754,15 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
                     continue
 
                 currency = summary.get("currency")
-                if currency and currency != "ILS":
+                if not currency:
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_CURRENCY_MISSING",
+                        updated_at=time.time(),
+                    )
+                    continue
+                if currency != "ILS":
                     _update_order(
                         current["order_id"],
                         status="RECOVERABLE",
@@ -759,9 +798,8 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
 
 
 def start_card_recovery_loop(interval_seconds: int = 300):
-    """Run provider reconciliation + fulfillment recovery in the background."""
-    import threading
-
+    """Start at most one provider reconciliation loop per process."""
+    global _card_recovery_thread
     interval_seconds = max(60, int(interval_seconds))
 
     def runner():
@@ -775,13 +813,17 @@ def start_card_recovery_loop(interval_seconds: int = 300):
                 print("[CARD] reconciliation loop error:", type(exc).__name__)
             time.sleep(interval_seconds)
 
-    thread = threading.Thread(
-        target=runner,
-        daemon=True,
-        name="card-payment-recovery",
-    )
-    thread.start()
-    return thread
+    with _card_recovery_lock:
+        if _card_recovery_thread is not None and _card_recovery_thread.is_alive():
+            return _card_recovery_thread
+        thread = threading.Thread(
+            target=runner,
+            daemon=True,
+            name="card-payment-recovery",
+        )
+        _card_recovery_thread = thread
+        thread.start()
+        return thread
 
 
 def recover_card_orders(uid: str, limit: int = 10) -> dict:
