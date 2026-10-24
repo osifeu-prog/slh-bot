@@ -269,7 +269,13 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
         processed = db.get("processed_transfers")
         processed_keys = [
             str(key) for key, value in processed.items()
-            if str(value) == transfer_id
+            if (
+                (isinstance(value, str) and value.strip() == transfer_id)
+                or (
+                    isinstance(value, dict)
+                    and str(value.get("transfer_id") or "").strip() == transfer_id
+                )
+            )
         ][:5] if isinstance(processed, dict) else []
         evidence["transfer"] = {
             "transfer_id": transfer_id,
@@ -431,6 +437,21 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 "record_found": True,
                 "resolves_gap": bool(exact_source_event),
                 "verification_checks": verification_checks,
+                # Expose only boolean clearance diagnostics, not another account's
+                # wallet balances or private profile fields. This tells an owner
+                # exactly which archival prerequisite is missing without treating
+                # heuristic context as accounting proof.
+                "source_clearance_evidence": {
+                    "active_source_user_present": isinstance(source_user, dict),
+                    "archive_record_found": isinstance(archived_user, dict),
+                    "archive_wallet_found": isinstance(archived_wallet, dict),
+                    "archived_credits_explicit_zero": (
+                        archived_credits is not None and abs(archived_credits) <= EPSILON
+                    ),
+                    "archived_staked_explicit_zero": (
+                        archived_staked is not None and abs(archived_staked) <= EPSILON
+                    ),
+                },
                 "verification_failures": [
                     name for name, passed in verification_checks.items() if passed is not True
                 ],

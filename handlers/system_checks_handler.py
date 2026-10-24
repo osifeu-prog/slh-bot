@@ -689,6 +689,16 @@ def register(bot, context=None):
                             if isinstance(verification_failures, list) and verification_failures:
                                 safe_failures = [str(name)[:48] for name in verification_failures[:8]]
                                 lines.append("  Alpha verification failed: " + ", ".join(safe_failures))
+                            clearance = event.get("source_clearance_evidence")
+                            if isinstance(clearance, dict):
+                                lines.append(
+                                    "  Alpha source clearance: "
+                                    f"active_source_user_present={clearance.get('active_source_user_present', 'UNKNOWN')} · "
+                                    f"archive_record_found={clearance.get('archive_record_found', 'UNKNOWN')} · "
+                                    f"archive_wallet_found={clearance.get('archive_wallet_found', 'UNKNOWN')} · "
+                                    f"archived_credits_explicit_zero={clearance.get('archived_credits_explicit_zero', 'UNKNOWN')} · "
+                                    f"archived_staked_explicit_zero={clearance.get('archived_staked_explicit_zero', 'UNKNOWN')}"
+                                )
                     intervening = evidence.get("intervening_rows")
                     if isinstance(intervening, list):
                         for middle in intervening[:3]:
