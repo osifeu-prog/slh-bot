@@ -601,12 +601,26 @@ def public_site_status():
 
 @app.route("/tonconnect-manifest.json")
 def tonconnect_manifest():
-    """Public TON Connect manifest; proof domain remains the canonical SLH site."""
     return jsonify({
         "url": "https://slh-nft.com",
         "name": "SLH Ecosystem",
         "iconUrl": "https://slh-nft.com/icon-192.png",
     }), 200
+
+@app.route("/manifest.json")
+@app.route("/web/manifest.json")
+def pwa_manifest():
+    return send_from_directory("web", "manifest.json", mimetype="application/manifest+json")
+
+@app.route("/privacy")
+@app.route("/PRIVACY_POLICY.md")
+def privacy_policy():
+    return send_from_directory(".", "PRIVACY_POLICY.md")
+
+@app.route("/terms")
+@app.route("/TERMS.md")
+def terms_policy():
+    return send_from_directory(".", "TERMS.md")
 
 @app.route("/api/wallet/bnb/handoff", methods=["POST"])
 def bnb_wallet_handoff():
@@ -3652,6 +3666,8 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
+
 
 
 
