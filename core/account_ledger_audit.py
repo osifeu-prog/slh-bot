@@ -1,4 +1,4 @@
-"""Read-only diagnostics for a single user's canonical Credits ledger sequence.
+﻿"""Read-only diagnostics for a single user's canonical Credits ledger sequence.
 
 This module never repairs or rewrites balances. It may reconcile a specifically
 allow-listed historical transition only when its version-controlled source
