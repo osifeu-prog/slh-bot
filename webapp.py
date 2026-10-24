@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory, request, make_response, g, redirect
+﻿from flask import Flask, jsonify, send_from_directory, request, make_response, g, redirect
 import state_manager
 import hmac
 import json
@@ -875,7 +875,7 @@ function showGuide(id){
     button.id="slh-synth-miniapp-button";
     button.type="button";
     button.className="action";
-    button.innerHTML="<b>🎹 סינתיסייזר</b><span>בנה אקורדים ונגן רצף</span>";
+    button.innerHTML="<b>נ¹ ׳¡׳™׳ ׳×׳™׳¡׳™׳™׳–׳¨</b><span>׳‘׳ ׳” ׳׳§׳•׳¨׳“׳™׳ ׳•׳ ׳’׳ ׳¨׳¦׳£</span>";
     button.addEventListener("click",function(){
       window.location.assign("/synth-ui?source=miniapp");
     });
@@ -1166,9 +1166,9 @@ def card_pay_success():
     return (
         "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
         "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
-        "<h2>✅ התשלום הועבר לבדיקה</h2>"
-        "<p>ההזמנה תסופק רק לאחר אישור שרת של ספק הסליקה.</p>"
-        "<p>אין צורך לשלם שוב.</p>"
+        "<h2>ג… ׳”׳×׳©׳׳•׳ ׳”׳•׳¢׳‘׳¨ ׳׳‘׳“׳™׳§׳”</h2>"
+        "<p>׳”׳”׳–׳׳ ׳” ׳×׳¡׳•׳₪׳§ ׳¨׳§ ׳׳׳—׳¨ ׳׳™׳©׳•׳¨ ׳©׳¨׳× ׳©׳ ׳¡׳₪׳§ ׳”׳¡׳׳™׳§׳”.</p>"
+        "<p>׳׳™׳ ׳¦׳•׳¨׳ ׳׳©׳׳ ׳©׳•׳‘.</p>"
         + (f"<p>Order: <code>{order_id}</code></p>" if order_id else "")
         + "</body></html>",
         200,
@@ -1181,8 +1181,8 @@ def card_pay_failure():
     return (
         "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
         "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
-        "<h2>❌ התשלום לא אושר</h2>"
-        "<p>לא בוצעה אספקה של המוצר.</p>"
+        "<h2>ג ׳”׳×׳©׳׳•׳ ׳׳ ׳׳•׳©׳¨</h2>"
+        "<p>׳׳ ׳‘׳•׳¦׳¢׳” ׳׳¡׳₪׳§׳” ׳©׳ ׳”׳׳•׳¦׳¨.</p>"
         "</body></html>",
         200,
         {"Content-Type": "text/html; charset=utf-8"},
@@ -1194,8 +1194,8 @@ def card_pay_cancel():
     return (
         "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
         "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
-        "<h2>↩️ התשלום בוטל</h2>"
-        "<p>לא נוצר חיוב נוסף.</p>"
+        "<h2>ג†©ן¸ ׳”׳×׳©׳׳•׳ ׳‘׳•׳˜׳</h2>"
+        "<p>׳׳ ׳ ׳•׳¦׳¨ ׳—׳™׳•׳‘ ׳ ׳•׳¡׳£.</p>"
         "</body></html>",
         200,
         {"Content-Type": "text/html; charset=utf-8"},
@@ -1347,7 +1347,7 @@ def social_share_landing(asset_id):
     image_url = f"{base}/api/v1/social/assets/{asset_key}.png"
     share_url = f"{base}/share/{asset_key}"
     mini_app_url = f"{base}/mini-app-v4"
-    title = html_escape("SLH Spark — " + str(asset["title"]))
+    title = html_escape("SLH Spark ג€” " + str(asset["title"]))
     description = html_escape(" ".join(str(asset["caption"]).split()))
     image = html_escape(image_url, quote=True)
     canonical = html_escape(share_url, quote=True)
@@ -1366,7 +1366,7 @@ def social_share_landing(asset_id):
 <meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{image}">
 <style>body{{margin:0;background:#081121;color:#f7faff;font:18px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box}}main{{width:min(920px,100%)}}img{{width:100%;height:auto;border-radius:20px;box-shadow:0 18px 70px #0008}}p{{line-height:1.7;color:#c5d2e7}}a{{display:inline-block;background:#58d9ce;color:#071323;text-decoration:none;font-weight:700;padding:13px 20px;border-radius:12px}}</style>
 </head><body><main><img src="{image}" width="1200" height="630" alt="{title}">
-<h1>{title}</h1><p>{description}</p><a href="{app_link}">פתח את SLH Spark</a></main></body></html>"""
+<h1>{title}</h1><p>{description}</p><a href="{app_link}">׳₪׳×׳— ׳׳× SLH Spark</a></main></body></html>"""
     response = make_response(page)
     response.headers["Content-Type"] = "text/html; charset=utf-8"
     response.headers["Cache-Control"] = "public, max-age=3600"
@@ -1463,7 +1463,7 @@ def stars_store_api():
 
     catalog.append({
         "id": "vip_monthly",
-        "name": "SLH VIP — חודשי",
+        "name": "SLH VIP ג€” ׳—׳•׳“׳©׳™",
         "price_stars": int(VIP_MONTHLY_STARS),
         "category": "vip",
         "type": "subscription",
@@ -1562,51 +1562,51 @@ def ton_go_live():
             "id": "identity",
             "label": "Telegram identity",
             "ok": True,
-            "action": "המשתמש מאומת דרך Telegram initData.",
+            "action": "׳”׳׳©׳×׳׳© ׳׳׳•׳׳× ׳“׳¨׳ Telegram initData.",
         },
         {
             "id": "wallet_binding",
             "label": "TON wallet binding",
             "ok": bool(binding),
-            "action": "חבר ואמת TON wallet ב־Wallet." if not binding else "ארנק TON מאומת.",
+            "action": "׳—׳‘׳¨ ׳•׳׳׳× TON wallet ׳‘ײ¾Wallet." if not binding else "׳׳¨׳ ׳§ TON ׳׳׳•׳׳×.",
         },
         {
             "id": "treasury_and_rate",
             "label": "Treasury + safe rate",
             "ok": bool(readiness.get("ready")),
             "action": (
-                "תקן את הגדרות Treasury / Rate לפני פתיחה: "
+                "׳×׳§׳ ׳׳× ׳”׳’׳“׳¨׳•׳× Treasury / Rate ׳׳₪׳ ׳™ ׳₪׳×׳™׳—׳”: "
                 + ", ".join(str(x) for x in readiness.get("reasons", []))
             ) if not readiness.get("ready") else (
-                "Treasury תקין · Rate בטווח הבטוח."
+                "Treasury ׳×׳§׳™׳ ֲ· Rate ׳‘׳˜׳•׳•׳— ׳”׳‘׳˜׳•׳—."
             ),
         },
         {
             "id": "owner_canary",
             "label": "Owner canary authorization",
             "ok": canary_allowed or bool(readiness.get("effective_open")),
-            "action": "Owner Canary אינו מאושר כרגע." if not canary_allowed and not readiness.get("effective_open")
-            else "Owner Canary מאושר." if not readiness.get("effective_open")
-            else "ה־public gate כבר פעיל.",
+            "action": "Owner Canary ׳׳™׳ ׳• ׳׳׳•׳©׳¨ ׳›׳¨׳’׳¢." if not canary_allowed and not readiness.get("effective_open")
+            else "Owner Canary ׳׳׳•׳©׳¨." if not readiness.get("effective_open")
+            else "׳”ײ¾public gate ׳›׳‘׳¨ ׳₪׳¢׳™׳.",
         },
         {
             "id": "empirical_settlement",
             "label": "Empirical TON settlement",
             "ok": settlement_evidence,
             "action": (
-                "בצע הפקדת canary אמיתית מהארנק המאומת עם Memo "
+                "׳‘׳¦׳¢ ׳”׳₪׳§׳“׳× canary ׳׳׳™׳×׳™׳× ׳׳”׳׳¨׳ ׳§ ׳”׳׳׳•׳׳× ׳¢׳ Memo "
                 + memo_for(uid)
-                + " והמתן לזיכוי."
-            ) if not settlement_evidence else "נמצאה ראיית settlement מאומתת.",
+                + " ׳•׳”׳׳×׳ ׳׳–׳™׳›׳•׳™."
+            ) if not settlement_evidence else "׳ ׳׳¦׳׳” ׳¨׳׳™׳™׳× settlement ׳׳׳•׳׳×׳×.",
         },
         {
             "id": "idempotency",
             "label": "Replay / idempotency evidence",
             "ok": replay_evidence,
             "action": (
-                "הרץ replay של אותו TX hash וודא שאין זיכוי נוסף."
+                "׳”׳¨׳¥ replay ׳©׳ ׳׳•׳×׳• TX hash ׳•׳•׳“׳ ׳©׳׳™׳ ׳–׳™׳›׳•׳™ ׳ ׳•׳¡׳£."
                 if not replay_evidence
-                else "ראיית idempotency קיימת."
+                else "׳¨׳׳™׳™׳× idempotency ׳§׳™׳™׳׳×."
             ),
         },
         {
@@ -1614,9 +1614,9 @@ def ton_go_live():
             "label": "Public gate remains closed",
             "ok": not bool(readiness.get("flag_open")),
             "action": (
-                "השאר TON_DEPOSITS_OPEN=0 עד שכל הראיות ירוקות."
+                "׳”׳©׳׳¨ TON_DEPOSITS_OPEN=0 ׳¢׳“ ׳©׳›׳ ׳”׳¨׳׳™׳•׳× ׳™׳¨׳•׳§׳•׳×."
                 if readiness.get("flag_open")
-                else "הציבור עדיין חסום — תקין."
+                else "׳”׳¦׳™׳‘׳•׳¨ ׳¢׳“׳™׳™׳ ׳—׳¡׳•׳ ג€” ׳×׳§׳™׳."
             ),
         },
     ]
@@ -1642,7 +1642,7 @@ def ton_go_live():
             "replay_evidence": replay_evidence,
         },
         "checks": checks,
-        "next_action": next((item["action"] for item in checks if not item["ok"]), "כל בדיקות ה־Go-Live עברו."),
+        "next_action": next((item["action"] for item in checks if not item["ok"]), "׳›׳ ׳‘׳“׳™׳§׳•׳× ׳”ײ¾Go-Live ׳¢׳‘׳¨׳•."),
         "open_instruction": "TON_DEPOSITS_OPEN=1",
     })), 200
 
@@ -3445,7 +3445,7 @@ def api_tokenomics():
                 "referred_by": referral_data.get("referred_by"),
                 "offer_open": bool(referral.get("offer_open")),
                 "offer_ends_at": int(OFFER_ENDS_AT),
-                "milestone": "5 successful referrals → 1 VIP month",
+                "milestone": "5 successful referrals ג†’ 1 VIP month",
                 "commission_scope": "Credits purchases only; Stars items/VIP are not referral-commissioned",
                 "attribution": referral_attribution,
             },
@@ -3652,6 +3652,7 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
 
 
 
