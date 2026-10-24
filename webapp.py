@@ -823,6 +823,54 @@ def bnb_smoke_page():
     return resp
 
 
+@app.route("/market-lab")
+def market_lab_page():
+    """Serve the public-data-only market heatmap and browser-local paper portfolio."""
+    html_path = BASE_DIR / "market_heatmap.html"
+    if not html_path.is_file():
+        return jsonify({"error": "MARKET_LAB_UNAVAILABLE"}), 503
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
+@app.route("/api/public/market-heatmap", methods=["GET"])
+def public_market_heatmap():
+    """Read-only sanitized quote snapshot; never exposes provider credentials or trade controls."""
+    try:
+        from core.paper_market import market_lab_summary, market_snapshot
+        # Public clients cannot bypass the short provider cache on every click.
+        snapshot = market_snapshot()
+        summary = market_lab_summary(snapshot)
+        payload = {
+            "ok": snapshot.get("status") in {"AVAILABLE", "PARTIAL"},
+            **snapshot,
+            "summary": summary,
+            "execution_enabled": False,
+            "paper_only": True,
+        }
+        status = 200 if payload["ok"] else 503
+        response = jsonify(payload)
+        response.headers["Cache-Control"] = "no-store"
+        return response, status
+    except Exception as exc:
+        # Never echo provider responses, URLs, SQL, environment values, or exception text.
+        response = jsonify({
+            "ok": False,
+            "status": "MARKET_HEATMAP_UNAVAILABLE",
+            "provider": "Twelve Data",
+            "tiles": [],
+            "reason": type(exc).__name__,
+            "paper_only": True,
+            "execution_enabled": False,
+        })
+        response.headers["Cache-Control"] = "no-store"
+        return response, 503
+
+
 @app.route("/synth-ui")
 def synth_ui_page():
     """Serve the standalone Synth UI used by Telegram and the Mini App."""
