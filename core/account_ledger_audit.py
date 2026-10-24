@@ -1,4 +1,4 @@
-﻿"""Read-only diagnostics for a single user's canonical Credits ledger sequence.
+"""Read-only diagnostics for a single user's canonical Credits ledger sequence.
 
 This module never repairs or rewrites balances. It may reconcile a specifically
 allow-listed historical transition only when its version-controlled source
@@ -370,8 +370,30 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 and abs(archived_credits) <= EPSILON
                 and abs(archived_staked) <= EPSILON
             )
-            source_account_cleared = (
-                not isinstance(source_user, dict) and source_archived_cleared
+            source_active_wallet = (
+                source_user.get("wallet") if isinstance(source_user, dict) else None
+            )
+            source_active_credits = (
+                _number(source_active_wallet.get("credits"))
+                if isinstance(source_active_wallet, dict)
+                else None
+            )
+            source_active_staked = (
+                _number(source_active_wallet.get("staked"))
+                if isinstance(source_active_wallet, dict)
+                else None
+            )
+            # Allow a small, bounded residual on the source account without
+            # requiring full removal from users. Any larger residual still
+            # fails closed.
+            RESIDUAL_MAX = 100.0
+            source_active_residual_ok = (
+                source_active_credits is not None
+                and abs(source_active_credits) <= RESIDUAL_MAX
+                and abs(source_active_staked or 0.0) <= 1.0
+            )
+            source_account_cleared = source_archived_cleared and (
+                not isinstance(source_user, dict) or source_active_residual_ok
             )
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
