@@ -612,6 +612,18 @@ def tonconnect_manifest():
 def pwa_manifest():
     return send_from_directory("web", "manifest.json", mimetype="application/manifest+json")
 
+@app.route("/.well-known/assetlinks.json")
+def assetlinks():
+    return send_from_directory("web/.well-known", "assetlinks.json", mimetype="application/json")
+
+@app.route("/.well-known/apple-app-site-association")
+def apple_assoc():
+    # לא חובה אבל טוב ל-iOS עתידי
+    return jsonify({"applinks": {"apps": [], "details": []}}), 200
+
+def _pwa_manifest_old():
+    return send_from_directory("web", "manifest.json", mimetype="application/manifest+json")
+
 @app.route("/privacy")
 @app.route("/PRIVACY_POLICY.md")
 def privacy_policy():
@@ -3666,6 +3678,7 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
 
 
 
