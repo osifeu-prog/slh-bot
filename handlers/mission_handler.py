@@ -25,11 +25,10 @@ def register(bot, context=None):
     @bot.message_handler(commands=["mission"])
     def mission_cmd(m):
         parts = (m.text or "").split(" ", 2)
-        if len(parts) < 2:
-            bot.reply_to(m, "שימוש: /mission add <תיאור> | list | assign <id> <agent> | done <id> | run <id> | rewards")
-            return
-
-        action = parts[1].lower()
+        # The personal dashboard points users to bare /mission. Make that
+        # entry point read-only and useful by defaulting to the mission list.
+        # Mutating actions still require an explicit subcommand and owner check.
+        action = parts[1].lower() if len(parts) >= 2 else "list"
         if action in {"add", "assign", "done", "run"}:
             if not callable(is_admin) or not is_admin(m):
                 bot.reply_to(m, "❌ פעולה זו זמינה ל-Owner בלבד.")
