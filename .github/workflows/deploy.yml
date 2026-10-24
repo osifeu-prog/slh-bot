@@ -45,7 +45,7 @@ jobs:
           from pathlib import Path
           import ast
 
-          webapp = Path("webapp.py").read_text(encoding="utf-8")
+          webapp = Path("webapp.py").read_text(encoding="utf-8-sig")
           exchange = Path("handlers/exchange_handler.py").read_text(encoding="utf-8")
           payment = Path("handlers/payment_handler.py").read_text(encoding="utf-8")
           stars = Path("store/stars_purchase_service.py").read_text(encoding="utf-8")
