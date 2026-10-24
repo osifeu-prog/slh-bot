@@ -35,31 +35,6 @@ _VERIFIED_ALPHA_CONSOLIDATION = {
 }
 
 
-# Approved historical manual adjustments.
-# Each entry MUST reference a version-controlled commit that documents the
-# adjustment. This is the "Adjustment Journal Entry" pattern: explicit,
-# commit-backed, and audit-able. NOT a bypass — unknown adjustments still fail.
-_APPROVED_HISTORICAL_ADJUSTMENTS = {
-    "gap_1_minus_10771_9": {
-        "uid": "8789977826",
-        "rows": [65, 66],
-        "amount": -10771.9,
-        "approved_by": "owner:8789977826",
-        "approved_at": "2026-10-20T10:30:15Z",
-        "rationale": "manual_reset_before_giveme; not a code bug",
-        "source_commit": "b467b937",
-    },
-    "gap_2_plus_5_0": {
-        "uid": "8789977826",
-        "rows": [199, 202],
-        "amount": 5.0,
-        "approved_by": "owner:8789977826",
-        "approved_at": "2026-10-20T10:30:15Z",
-        "rationale": "manual_refund_test_bill; not a code bug",
-        "source_commit": "b467b937",
-    },
-}
-
 def _number(value: Any) -> float | None:
     if isinstance(value, bool):
         return None
@@ -532,26 +507,9 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             )
         )
     )
-    allowlisted_attestation = False
-    if isinstance(owner_attestation_context, dict):
-        gap_id = owner_attestation_context.get("gap_id")
-        approved = _APPROVED_HISTORICAL_ADJUSTMENTS.get(gap_id) if gap_id else None
-        if (
-            isinstance(approved, dict)
-            and approved.get("uid") == uid
-            and approved.get("rows") == owner_attestation_context.get("rows")
-            and owner_attestation_context.get("claimed_delta") is not None
-            and abs(approved.get("amount", 0) - owner_attestation_context.get("claimed_delta")) <= EPSILON
-            and approved.get("source_commit")
-        ):
-            allowlisted_attestation = True
-            evidence["allowlisted_adjustment"] = {
-                "gap_id": gap_id,
-                "source_commit": approved.get("source_commit"),
-                "approved_by": approved.get("approved_by"),
-                "approved_at": approved.get("approved_at"),
-            }
-    evidence["resolves_gap"] = bool(verified_alpha or allowlisted_attestation)
+    # Owner attestations are context, not independent accounting evidence.
+    # Only a source-backed reconciliation may close a Credits continuity gap.
+    evidence["resolves_gap"] = bool(verified_alpha)
     return evidence
 
 def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS) -> dict:
