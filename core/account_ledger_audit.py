@@ -424,10 +424,7 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 # Staked is a separate asset and cannot explain any Credits delta.
                 "credits_delta_matches": (
                     observed_delta is not None
-                    and abs(
-                        observed_delta
-                        - (verified["credits"] + verified["staked_moved"])
-                    ) <= EPSILON
+                    and abs(observed_delta - verified["credits"]) <= EPSILON
                 ),
                 "source_account_cleared": source_account_cleared,
             }
