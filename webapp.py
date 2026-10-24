@@ -616,16 +616,6 @@ def pwa_manifest():
 
 
 @app.route("/.well-known/assetlinks.json")
-@app.route("/debug_owner_rows")
-def debug_owner_rows():
-    import json
-    try:
-        db=json.load(open('/app/state/db.json'))
-        ol=db.get('owner_ledger', [])[:10]
-        return jsonify(ol)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 def assetlinks():
     return send_from_directory("web/.well-known", "assetlinks.json", mimetype="application/json")
 def apple_assoc():
@@ -3689,6 +3679,7 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
 
 
 
