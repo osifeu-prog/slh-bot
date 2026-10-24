@@ -947,6 +947,8 @@ def _request_guarded_exchange_gate_open():
         and check.get("order_book_integrity") is True
         and check.get("trade_integrity") is True
         and check.get("money_invariants") is True
+        and check.get("account_ledger_status") == "PASS"
+        and check.get("account_ledger_integrity") is True
         and check.get("open_orders") == 0
         and check.get("test_seed_open") == 0
         and check.get("test_seed_trades") == 0
@@ -964,17 +966,22 @@ def _request_guarded_exchange_gate_open():
         )
 
     proof = {
-        "status": "PASS",
+        # Copy the just-checked facts into the proof; the validator independently
+        # rejects missing, false, stale, or inconsistent fields. Never synthesize
+        # ledger PASS values when the source check did not produce them.
+        "status": "PASS" if check.get("ok") is True else "BLOCKED",
         "checked_at": datetime.now(timezone.utc).isoformat(),
-        "public_gate": "CLOSED",
-        "verdict": "READY_TO_OPEN",
-        "public_ready": True,
-        "order_book_integrity": True,
-        "trade_integrity": True,
-        "money_invariants": True,
-        "open_orders": 0,
-        "test_seed_open": 0,
-        "test_seed_trades": 0,
+        "public_gate": check.get("public_gate"),
+        "verdict": check.get("verdict"),
+        "public_ready": check.get("public_ready") is True,
+        "order_book_integrity": check.get("order_book_integrity") is True,
+        "trade_integrity": check.get("trade_integrity") is True,
+        "money_invariants": check.get("money_invariants") is True,
+        "account_ledger_status": str(check.get("account_ledger_status") or "UNKNOWN"),
+        "account_ledger_integrity": check.get("account_ledger_integrity") is True,
+        "open_orders": check.get("open_orders"),
+        "test_seed_open": check.get("test_seed_open"),
+        "test_seed_trades": check.get("test_seed_trades"),
     }
     try:
         from core.railway_control import request_exchange_gate_open, safe_railway_error_code
