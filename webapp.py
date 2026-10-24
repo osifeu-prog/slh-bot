@@ -614,6 +614,7 @@ def pwa_manifest():
 
 
 
+
 @app.route("/.well-known/assetlinks.json")
 def assetlinks():
     return send_from_directory("web/.well-known", "assetlinks.json", mimetype="application/json")
@@ -3679,6 +3680,7 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
 
 
 
