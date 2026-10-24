@@ -641,8 +641,13 @@ def register(bot, context=None):
                 evidence = record.get("evidence") or {}
                 lines.append(
                     f"  LEGACY_UNSTAKE_AMBIGUITY: {record.get('position_id')} "
-                    f"amount={record.get('amount')} ledger_row={evidence.get('ledger_index')} "
-                    f"age_seconds={evidence.get('seconds_from_creation')}"
+                    f"position_amount={record.get('amount')} "
+                    f"position_created_at={evidence.get('position_created_at')} "
+                    f"ledger_row={evidence.get('ledger_index')} "
+                    f"ledger_amount={evidence.get('ledger_amount')} "
+                    f"ledger_time={evidence.get('ledger_time')} "
+                    f"age_seconds={evidence.get('seconds_from_creation')} "
+                    f"legacy_unlinked={not bool(evidence.get('position_id'))}"
                 )
             if len(staking_review) > 8:
                 lines.append(f"  +{len(staking_review) - 8} additional positions omitted")
