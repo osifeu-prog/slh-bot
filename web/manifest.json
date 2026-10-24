@@ -1,0 +1,27 @@
+﻿{
+  "name": "SLH OS - Personal Hub",
+  "short_name": "SLH OS",
+  "description": "SLH OS Personal Hub - Wallet, Trade, Academy, Agents",
+  "start_url": "/mini-app-v4?v=pwa-20261024",
+  "display": "standalone",
+  "background_color": "#070a12",
+  "theme_color": "#7c5cff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/branding/slh-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://slh-nft.com/img/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "education"],
+  "lang": "he",
+  "dir": "rtl"
+}
