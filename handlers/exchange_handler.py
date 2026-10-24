@@ -947,6 +947,8 @@ def _request_guarded_exchange_gate_open():
         and check.get("order_book_integrity") is True
         and check.get("trade_integrity") is True
         and check.get("money_invariants") is True
+        and check.get("account_ledger_status") == "PASS"
+        and check.get("account_ledger_integrity") is True
         and check.get("open_orders") == 0
         and check.get("test_seed_open") == 0
         and check.get("test_seed_trades") == 0
@@ -972,6 +974,9 @@ def _request_guarded_exchange_gate_open():
         "order_book_integrity": True,
         "trade_integrity": True,
         "money_invariants": True,
+        # Forward the result of the canonical owner-ledger audit; never synthesize PASS.
+        "account_ledger_status": check.get("account_ledger_status"),
+        "account_ledger_integrity": check.get("account_ledger_integrity"),
         "open_orders": 0,
         "test_seed_open": 0,
         "test_seed_trades": 0,
